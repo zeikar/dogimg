@@ -1,11 +1,18 @@
 import express, { Express, Request, Response } from "express";
-import { createImage } from "./src/lib/image";
+import { generateOGImage } from "./src/controller/image";
 
 const app: Express = express();
 const port = 8080;
 
 app.get("/:url", async (req: Request, res: Response) => {
-  var img = await createImage(req.params.url);
+  try {
+    var img = await generateOGImage(req.params.url);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+
+    return;
+  }
 
   res.writeHead(200, {
     "Content-Type": "image/png",
