@@ -1,10 +1,10 @@
-import express, { Express, Request, Response } from "express";
-import { generateOGImage } from "./src/controller/image";
+import express from "express";
+import { generateOGImage } from "./src/controller/image.js";
 
-const app: Express = express();
+const app = express();
 const port = 8080;
 
-app.get("/:url", async (req: Request, res: Response) => {
+app.get("/:url", async (req, res) => {
   try {
     var img = await generateOGImage(req.params.url);
   } catch (error) {

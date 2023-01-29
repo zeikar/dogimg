@@ -1,6 +1,4 @@
-import { MetaData } from "../types/metadata";
-
-export const getSiteMetaDataFromMetaTags = (metaTags: any): MetaData => {
+export const getSiteMetaDataFromMetaTags = (metaTags) => {
   return {
     title: metaTags["og:title"] || "",
     description: metaTags["og:description"] || "",
