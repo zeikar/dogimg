@@ -28,18 +28,36 @@ function parseFaviconFromHTML(html) {
       return acc;
     }, "");
 
-  console.log(favicon);
   return favicon;
 }
 
-export const getSiteMetaDataFromHTML = (html) => {
+function parseTitleFromHTML(html) {
+  const $ = load(html);
+  const title = $("title").text();
+  return title;
+}
+
+function getFaviconUrl(url, faviconUrl) {
+  if (faviconUrl.startsWith("http")) {
+    return faviconUrl;
+  }
+
+  const baseUrl = url.split("/").slice(0, 3).join("/");
+  if (faviconUrl.startsWith("/")) {
+    return baseUrl + faviconUrl;
+  }
+  return baseUrl + "/favicon.ico";
+}
+
+export const getSiteMetaDataFromHTML = (url, html) => {
   const metaTags = parseMetaTagsFromHTML(html);
-  const favicon = parseFaviconFromHTML(html);
+  const favicon = getFaviconUrl(url, parseFaviconFromHTML(html));
 
   return {
-    title: metaTags["og:title"] || "",
+    title: metaTags["og:title"] || parseTitleFromHTML(html),
     description: metaTags["og:description"] || "",
     site_name: metaTags["og:site_name"] || "",
+    color: metaTags["theme-color"] || "",
     favicon: favicon || "",
   };
 };
