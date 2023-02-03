@@ -21,6 +21,9 @@ function parseFaviconFromHTML(html) {
     const rel = tag.getAttribute("rel");
     return rel && rel.includes("icon");
   });
+  if (!faviconTag) {
+    return "";
+  }
   return faviconTag.getAttribute("href");
 }
 
@@ -34,11 +37,21 @@ function getFaviconUrl(url, faviconUrl) {
     return faviconUrl;
   }
 
-  const baseUrl = url.split("/").slice(0, 3).join("/");
+  const baseUrl = getBaseUrl(url);
   if (faviconUrl.startsWith("/")) {
     return baseUrl + faviconUrl;
   }
-  return baseUrl + "/favicon.ico";
+  return "";
+  //return baseUrl + "/favicon.ico";
+}
+
+function getBaseUrl(url) {
+  return url.split("/").slice(0, 3).join("/");
+}
+
+function getHostname(url) {
+  const urlObject = new URL(url);
+  return urlObject.hostname;
 }
 
 export const getSiteMetaDataFromHTML = (url, html) => {
@@ -49,7 +62,7 @@ export const getSiteMetaDataFromHTML = (url, html) => {
   return {
     title: metaTags["og:title"] || parseTitleFromHTML(html),
     description: metaTags["og:description"] || "",
-    site_name: metaTags["og:site_name"] || "",
+    site_name: metaTags["og:site_name"] || getHostname(url),
     color: metaTags["theme-color"] || "#cccccc",
     favicon: favicon || "",
   };

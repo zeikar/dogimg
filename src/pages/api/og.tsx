@@ -7,18 +7,46 @@ export const config = {
   runtime: "edge",
 };
 
+function getURLFromRequest(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+
+  // ?url=<url>
+  const hasUrl = searchParams.has("url");
+  if (!hasUrl) {
+    return "https://github.com/zeikar/zeikar";
+  }
+
+  const url = searchParams.get("url");
+  if (url?.startsWith("http") === false) {
+    return `http://${url}`;
+  }
+
+  return url;
+}
+
+// Shorten string without cutting words in JavaScript
+function shortenString(str: string, maxLength: number) {
+  let words = str.split(" ");
+  let shortened = "";
+
+  while (words.length > 0) {
+    let word = words.shift();
+    if ((shortened + word).length > maxLength) break;
+    shortened += word + " ";
+  }
+
+  if (shortened.length < str.length) {
+    shortened += "...";
+  }
+  return shortened;
+}
+
 export default async function handler(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-
-    // ?url=<url>
-    const hasUrl = searchParams.has("url");
-    const url = hasUrl
-      ? searchParams.get("url")
-      : "https://github.com/kubernetes/kubernetes";
-
+    const url = getURLFromRequest(req);
     const html = await fetchHTML(url);
     const metaData = getSiteMetaDataFromHTML(url, html);
+    console.log(metaData);
 
     return new ImageResponse(
       (
@@ -40,13 +68,18 @@ export default async function handler(req: NextRequest) {
               color: "#222222",
             }}
           >
-            <img width="100" height="100" src={metaData.favicon} />
+            {
+              // if metaData.favicon is undefined, then don't render the image
+              metaData.favicon && (
+                <img width="100" height="100" src={metaData.favicon} />
+              )
+            }
             <div
               style={{
                 margin: "auto 0px auto 10px",
               }}
             >
-              {metaData.site_name}
+              {shortenString(metaData.site_name, 30)}
             </div>
           </div>
           <div
@@ -56,12 +89,11 @@ export default async function handler(req: NextRequest) {
               fontSize: "70px",
               fontWeight: "700",
               color: "#333333",
-              textOverflow: "ellipsis",
               lineHeight: "100%",
               wordBreak: "break-word",
             }}
           >
-            {metaData.title}
+            {shortenString(metaData.title, 60)}
           </div>
           <div
             style={{
@@ -70,7 +102,7 @@ export default async function handler(req: NextRequest) {
               color: "#555555",
             }}
           >
-            {metaData.description}
+            {shortenString(metaData.description, 220)}
           </div>
         </div>
       ),
