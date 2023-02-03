@@ -92,7 +92,8 @@ export default async function handler(req: NextRequest) {
           <div
             style={{
               margin: "0px 40px 0px 40px",
-              height: "200px",
+              height: "100px",
+              maxHeight: "200px",
               fontSize: "70px",
               fontWeight: "700",
               color: "#333333",
