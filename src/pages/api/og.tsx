@@ -71,12 +71,19 @@ export default async function handler(req: NextRequest) {
             {
               // if metaData.favicon is undefined, then don't render the image
               metaData.favicon && (
-                <img width="100" height="100" src={metaData.favicon} />
+                <img
+                  width="100"
+                  height="100"
+                  src={metaData.favicon}
+                  style={{
+                    marginRight: "10px",
+                  }}
+                />
               )
             }
             <div
               style={{
-                margin: "auto 0px auto 10px",
+                margin: "auto 0px auto 0px",
               }}
             >
               {shortenString(metaData.site_name, 30)}
@@ -85,7 +92,7 @@ export default async function handler(req: NextRequest) {
           <div
             style={{
               margin: "0px 40px 0px 40px",
-              maxHeight: "200px",
+              height: "200px",
               fontSize: "70px",
               fontWeight: "700",
               color: "#333333",

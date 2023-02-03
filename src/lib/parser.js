@@ -19,7 +19,9 @@ function parseFaviconFromHTML(html) {
   const linkTags = root.querySelectorAll("link");
   const faviconTag = linkTags.find((tag) => {
     const rel = tag.getAttribute("rel");
-    return rel && rel.includes("icon");
+    return (
+      rel && rel.includes("icon") && !tag.getAttribute("href").endsWith(".ico")
+    ); // 현재 ico 파일은 satori에서 지원하지 않음
   });
   if (!faviconTag) {
     return "";
@@ -28,8 +30,8 @@ function parseFaviconFromHTML(html) {
 }
 
 function parseTitleFromHTML(html) {
-  const root = parse(html);
-  return root.querySelector("title").text;
+  const titleTag = parse(html).querySelector("title");
+  return (titleTag && titleTag.text) || "";
 }
 
 function getFaviconUrl(url, faviconUrl) {
@@ -54,6 +56,10 @@ function getHostname(url) {
   return urlObject.hostname;
 }
 
+function getValidColor(color = "#bbbbbb") {
+  return color.startsWith("#") ? color : "#bbbbbb";
+}
+
 export const getSiteMetaDataFromHTML = (url, html) => {
   const metaTags = parseMetaTagsFromHTML(html);
   const favicon = getFaviconUrl(url, parseFaviconFromHTML(html));
@@ -63,7 +69,7 @@ export const getSiteMetaDataFromHTML = (url, html) => {
     title: metaTags["og:title"] || parseTitleFromHTML(html),
     description: metaTags["og:description"] || "",
     site_name: metaTags["og:site_name"] || getHostname(url),
-    color: metaTags["theme-color"] || "#cccccc",
+    color: getValidColor(metaTags["theme-color"]),
     favicon: favicon || "",
   };
 };
