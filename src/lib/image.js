@@ -4,7 +4,9 @@ import pkg from "@resvg/resvg-js";
 const { Resvg } = pkg;
 
 const notoSans = await fs.readFileSync("fonts/NotoSans-Regular.ttf");
+const notoSansBold = await fs.readFileSync("fonts/NotoSans-Bold.ttf");
 const notoSansKR = await fs.readFileSync("fonts/NotoSansKR-Regular.otf");
+const notoSansKRBold = await fs.readFileSync("fonts/NotoSansKR-Bold.otf");
 
 export const createImage = async (metaData) => {
   const svg = await satori(
@@ -26,13 +28,20 @@ export const createImage = async (metaData) => {
                     },
                   },
                 },
-                metaData.site_name,
+                {
+                  type: "div",
+                  props: {
+                    children: metaData.site_name,
+                    style: {
+                      margin: "auto 0px auto 10px",
+                    },
+                  },
+                },
               ],
               style: {
                 display: "flex",
-                border: "1px",
                 margin: "40px",
-                fontSize: "30px",
+                fontSize: "50px",
                 color: "#222222",
               },
             },
@@ -42,10 +51,14 @@ export const createImage = async (metaData) => {
             props: {
               children: metaData.title,
               style: {
-                border: "1px",
-                margin: "40px",
-                fontSize: "30px",
+                margin: "0px 40px 0px 40px",
+                maxHeight: "200px",
+                fontSize: "70px",
+                fontWeight: "bold",
                 color: "#333333",
+                textOverflow: "ellipsis",
+                lineHeight: "100%",
+                wordBreak: "break-word",
               },
             },
           },
@@ -54,10 +67,9 @@ export const createImage = async (metaData) => {
             props: {
               children: metaData.description,
               style: {
-                border: "1px",
                 margin: "40px",
                 fontSize: "30px",
-                color: "#444444",
+                color: "#555555",
               },
             },
           },
@@ -88,8 +100,21 @@ export const createImage = async (metaData) => {
           weight: 400,
           style: "normal",
         },
+        {
+          name: "Noto Sans",
+          data: notoSansBold,
+          weight: 700,
+          style: "normal",
+        },
+        {
+          name: "Noto Sans KR",
+          data: notoSansKRBold,
+          weight: 700,
+          style: "normal",
+        },
       ],
       embedFont: true, // false이면 resvg에서 font 처리
+      debug: true,
     }
   );
 

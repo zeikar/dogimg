@@ -57,7 +57,7 @@ export const getSiteMetaDataFromHTML = (url, html) => {
     title: metaTags["og:title"] || parseTitleFromHTML(html),
     description: metaTags["og:description"] || "",
     site_name: metaTags["og:site_name"] || "",
-    color: metaTags["theme-color"] || "",
+    color: metaTags["theme-color"] || "#cccccc",
     favicon: favicon || "",
   };
 };
