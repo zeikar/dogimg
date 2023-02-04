@@ -21,7 +21,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-1">
-            <a href="https://github.com/zeikar/dogimg" target="_blank">
+            <a
+              href="https://github.com/zeikar/dogimg"
+              target="_blank"
+              rel="noreferrer"
+            >
               <Image
                 src="/github-mark.svg"
                 alt="Github"

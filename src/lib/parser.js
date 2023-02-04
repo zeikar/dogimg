@@ -21,7 +21,7 @@ function parseFaviconFromHTML(html) {
     const rel = tag.getAttribute("rel");
     return (
       rel && rel.includes("icon") && !tag.getAttribute("href").endsWith(".ico")
-    ); // 현재 ico 파일은 satori에서 지원하지 않음
+    ); // Currently ico files are not supported by satori
   });
   if (!faviconTag) {
     return "";
