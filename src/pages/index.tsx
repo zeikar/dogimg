@@ -1,13 +1,12 @@
 import React from "react";
 import Navbar from "./components/navbar";
 import PreviewImage from "./components/preview";
+import InputForm from "./components/inputForm";
 
 export default function Home() {
-  const [url, setUrl] = React.useState("");
   const [ogApi, setOgApi] = React.useState("");
 
-  const handleGenerate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleGenerate = (url: string) => {
     console.log("Generate", url);
     setOgApi("/api/og?url=" + url);
   };
@@ -17,7 +16,7 @@ export default function Home() {
       <header>
         <Navbar />
       </header>
-      <main className="container mx-auto my-4">
+      <main className="container mx-auto my-4 max-w-6xl">
         <div
           className="
             flex
@@ -27,21 +26,14 @@ export default function Home() {
             bg-white
             mx-auto
             rounded-lg
+            shadow-lg
           "
         >
-          <div>
-            <PreviewImage src={ogApi} />
+          <div className="w-full">
+            <InputForm handleSubmit={handleGenerate} />
           </div>
-          <div>
-            <form className="" onSubmit={handleGenerate}>
-              <input
-                type="text"
-                placeholder="Enter a URL"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <button type="submit">Generate</button>
-            </form>
+          <div className="w-full mb-4">
+            <PreviewImage src={ogApi} />
           </div>
         </div>
       </main>
