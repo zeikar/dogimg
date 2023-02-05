@@ -14,7 +14,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <meta
           name="description"
-          content="DOGimg - A Dynamic Open Graph Image Generator With URL. Generate an open graph image with a URL."
+          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dogimg.vercel.app/" />
@@ -25,7 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <meta
           property="og:description"
-          content="DOGimg - A Dynamic Open Graph Image Generator With URL. Generate an open graph image with a URL."
+          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
         />
         <meta
           property="og:image"
@@ -39,7 +39,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <meta
           property="twitter:description"
-          content="DOGimg - A Dynamic Open Graph Image Generator With URL"
+          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
         />
         <meta
           property="twitter:image"
