@@ -20,7 +20,7 @@ function parseFaviconFromHTML(html) {
   const faviconTag = linkTags.find((tag) => {
     const rel = tag.getAttribute("rel");
     return (
-      rel && rel.includes("icon") && !tag.getAttribute("href").endsWith(".ico")
+      rel && rel.includes("icon") && !tag.getAttribute("href").includes(".ico")
     ); // Currently ico files are not supported by satori
   });
   if (!faviconTag) {
