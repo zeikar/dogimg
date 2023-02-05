@@ -9,16 +9,14 @@ export const config = {
 
 function getURLFromRequest(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  let url = searchParams.get("url")?.trim();
 
-  // ?url=<url>
-  const hasUrl = searchParams.has("url");
-  if (!hasUrl) {
-    return "https://github.com/zeikar/zeikar";
+  if (!url) {
+    return "https://github.com/zeikar/dogimg";
   }
 
-  const url = searchParams.get("url");
-  if (url?.startsWith("http") === false) {
-    return `http://${url}`;
+  if (!url.startsWith("http")) {
+    url = `http://${url}`;
   }
 
   return url;

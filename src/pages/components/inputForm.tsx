@@ -10,7 +10,7 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSubmit(url);
+    handleSubmit(url.trim());
   };
 
   const selectUrl = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
