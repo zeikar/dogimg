@@ -21,9 +21,9 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
   return (
     <div className="mx-auto">
       <form className="w-full" onSubmit={onSubmit}>
-        <div className="flex m-4 shadow-xl">
+        <div className="flex m-4">
           <input
-            className="w-full p-4 pl-3 pr-8 text-2xl placeholder-gray-600 text-gray-900 border border-gray-300 rounded-l-lg bg-gray-50 focus:shadow-outline focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+            className="w-full shadow-xl p-4 pl-3 pr-8 text-2xl placeholder-gray-600 text-gray-900 border border-gray-300 rounded-l-lg bg-gray-50 focus:shadow-outline focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
             type="text"
             placeholder="Enter a URL"
             aria-label="URL"

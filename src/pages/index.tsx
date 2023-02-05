@@ -2,12 +2,15 @@ import React from "react";
 import Navbar from "./components/navbar";
 import PreviewImage from "./components/preview";
 import InputForm from "./components/inputForm";
+import Clipboard from "./components/clipboard";
 
 export default function Home() {
   const [ogApi, setOgApi] = React.useState("");
+  const [url, setUrl] = React.useState("");
 
   const handleGenerate = (url: string) => {
     console.log("Generate", url);
+    setUrl(url);
     setOgApi("/api/og?url=" + url);
   };
 
@@ -32,8 +35,11 @@ export default function Home() {
           <div className="w-full">
             <InputForm handleSubmit={handleGenerate} />
           </div>
-          <div className="w-full mb-4">
+          <div className="w-full">
             <PreviewImage src={ogApi} />
+          </div>
+          <div className="w-full">
+            <Clipboard url={url} />
           </div>
         </div>
       </main>
