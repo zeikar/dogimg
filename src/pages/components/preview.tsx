@@ -43,7 +43,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ src }) => {
   const renderNoImage = () => {
     return (
       <div className="flex h-16 items-center justify-center">
-        <div className="text-gray-500">
+        <div className="text-gray-500 text-xl">
           Enter a URL to generate an open graph image
         </div>
       </div>
@@ -53,7 +53,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ src }) => {
   const renderError = () => {
     return (
       <div className="flex h-16 items-center justify-center">
-        <div className="text-red-500">Error Loading Image</div>
+        <div className="text-red-500 text-xl">Error Loading Image</div>
       </div>
     );
   };

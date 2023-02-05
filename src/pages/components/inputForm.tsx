@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ClickItem from "./clickItem";
 
 interface InputFormProps {
   handleSubmit: Function;
@@ -10,6 +11,11 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(url);
+  };
+
+  const selectUrl = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+    const target = e.target as HTMLSpanElement;
+    setUrl(target.innerText);
   };
 
   return (
@@ -33,6 +39,12 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
           </button>
         </div>
       </form>
+      <div className="mx-auto text-center text-gray-600">
+        Try these:
+        <ClickItem url="https://github.com" onClick={selectUrl} />
+        <ClickItem url="https://vercel.com" onClick={selectUrl} />
+        <ClickItem url="https://nextjs.org" onClick={selectUrl} />
+      </div>
     </div>
   );
 };
