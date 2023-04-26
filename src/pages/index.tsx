@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "./components/navbar";
+import Heading from "./components/heading";
 import PreviewImage from "./components/preview";
 import InputForm from "./components/inputForm";
 import Clipboard from "./components/clipboard";
@@ -19,7 +20,10 @@ export default function Home() {
       <header>
         <Navbar />
       </header>
-      <main className="container mx-auto my-4 max-w-6xl">
+      <div className="w-full">
+        <Heading />
+      </div>
+      <main className="container mx-auto my-4 max-w-5xl">
         <div
           className="
             flex
