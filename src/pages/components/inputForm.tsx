@@ -72,11 +72,13 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
           </p>
         ) : null}
       </form>
-      <div className="mx-auto text-center text-gray-600">
-        Try these:
-        <ClickItem url="https://github.com" onSelect={selectUrl} />
-        <ClickItem url="https://vercel.com" onSelect={selectUrl} />
-        <ClickItem url="https://nextjs.org" onSelect={selectUrl} />
+      <div className="mx-auto px-4 pb-1 text-center text-gray-600">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+          <span className="mr-1 text-sm text-slate-500">Try these:</span>
+          <ClickItem url="https://github.com" onSelect={selectUrl} />
+          <ClickItem url="https://vercel.com" onSelect={selectUrl} />
+          <ClickItem url="https://nextjs.org" onSelect={selectUrl} />
+        </div>
       </div>
     </div>
   );

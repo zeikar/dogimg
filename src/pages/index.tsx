@@ -23,7 +23,7 @@ export default function Home() {
       <div className="w-full">
         <Heading />
       </div>
-      <main className="container mx-auto my-2 max-w-5xl space-y-4">
+      <main className="container mx-auto mt-1 mb-2 max-w-5xl space-y-4">
         <div
           className="
             flex

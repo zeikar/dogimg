@@ -9,7 +9,7 @@ const ClickItem: React.FC<ClickItemProps> = ({ onSelect, url }) => {
   return (
     <button
       type="button"
-      className="inline-block cursor-pointer border-0 bg-transparent p-1 text-indigo-600 hover:underline"
+      className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100 sm:text-sm"
       onClick={() => onSelect(url)}
     >
       {url}

@@ -55,7 +55,7 @@ const Clipboard: React.FC<ClipboardProps> = ({ url }) => {
   }
 
   return (
-    <section className="px-4 py-3 text-gray-700">
+    <section className="px-4 pt-1 pb-3 text-gray-700">
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-700">Add to your site</h2>
