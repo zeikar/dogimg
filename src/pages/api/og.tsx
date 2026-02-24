@@ -7,6 +7,8 @@ export const config = {
   runtime: "edge",
 };
 
+const FALLBACK_ACCENT_HEX = "#7dd3fc";
+
 function getURLFromRequest(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   let url = searchParams.get("url")?.trim();
@@ -22,21 +24,98 @@ function getURLFromRequest(req: NextRequest) {
   return url;
 }
 
-// Shorten string without cutting words in JavaScript
 function shortenString(str: string, maxLength: number) {
-  let words = str.split(" ");
-  let shortened = "";
+  if (!str) {
+    return "";
+  }
+  const normalized = str.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  const sliced = normalized.slice(0, maxLength);
+  const lastSpace = sliced.lastIndexOf(" ");
+  if (lastSpace > maxLength * 0.6) {
+    return `${sliced.slice(0, lastSpace).trim()}...`;
+  }
+  return `${sliced.trim()}...`;
+}
 
-  while (words.length > 0) {
-    let word = words.shift();
-    if ((shortened + word).length > maxLength) break;
-    shortened += word + " ";
+function normalizeHexColor(color: string) {
+  if (!color || typeof color !== "string" || !color.startsWith("#")) {
+    return null;
+  }
+  const clean = color.slice(1).trim();
+  if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+    return clean
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+    return clean;
+  }
+  return null;
+}
+
+function hexToRgb(color: string) {
+  const normalized = normalizeHexColor(color);
+  if (!normalized) {
+    return null;
+  }
+  const intColor = Number.parseInt(normalized, 16);
+  return {
+    r: (intColor >> 16) & 255,
+    g: (intColor >> 8) & 255,
+    b: intColor & 255,
+  };
+}
+
+function blendRgb(base: { r: number; g: number; b: number }, mixWith: { r: number; g: number; b: number }, mixRatio: number) {
+  const ratio = Math.max(0, Math.min(1, mixRatio));
+  const baseRatio = 1 - ratio;
+  return {
+    r: Math.round(base.r * baseRatio + mixWith.r * ratio),
+    g: Math.round(base.g * baseRatio + mixWith.g * ratio),
+    b: Math.round(base.b * baseRatio + mixWith.b * ratio),
+  };
+}
+
+function getLuminance(rgb: { r: number; g: number; b: number }) {
+  return (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+}
+
+function rgbToCss(rgb: { r: number; g: number; b: number }, alpha = 1) {
+  if (alpha >= 1) {
+    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  }
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+function getBalancedAccentColor(color: string) {
+  const fallback = hexToRgb(FALLBACK_ACCENT_HEX) || { r: 125, g: 211, b: 252 };
+  let rgb = hexToRgb(color) || fallback;
+  const luminance = getLuminance(rgb);
+
+  if (luminance < 0.22) {
+    rgb = blendRgb(rgb, { r: 255, g: 255, b: 255 }, 0.35);
+  } else if (luminance > 0.9) {
+    rgb = blendRgb(rgb, { r: 30, g: 30, b: 30 }, 0.15);
   }
 
-  if (shortened.length < str.length) {
-    shortened += "...";
+  return rgb;
+}
+
+function getHostnameLabel(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "website";
   }
-  return shortened;
+}
+
+function getMonogram(label: string) {
+  const cleaned = label.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return cleaned.slice(0, 2) || "OG";
 }
 
 export default async function handler(req: NextRequest) {
@@ -45,71 +124,139 @@ export default async function handler(req: NextRequest) {
     const html = await fetchHTML(url);
     const metaData = getSiteMetaDataFromHTML(url, html);
     console.log(metaData);
+    const accentRgb = getBalancedAccentColor(metaData.color);
+    const accentStrong = rgbToCss(accentRgb, 0.92);
+    const accentSoft = rgbToCss(accentRgb, 0.4);
+    const siteName = shortenString(metaData.site_name, 30) || "Website";
+    const title = shortenString(metaData.title, 66) || siteName;
+    const description =
+      shortenString(metaData.description, 180) ||
+      "Generate polished Open Graph previews from any webpage URL.";
+    const hostnameLabel = getHostnameLabel(url);
+    const favicon = metaData.favicon;
 
     return new ImageResponse(
       (
         <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#ffffff",
-              // Keep accent color at the bottom, fading to white toward the top.
-              backgroundImage: `linear-gradient(to top, ${metaData.color} 0%, #ffffff 30%)`,
-            }}
-          >
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            height: "100%",
+            padding: "44px",
+            backgroundColor: "#ffffff",
+            backgroundImage: `linear-gradient(to top, ${accentStrong} 0%, ${accentSoft} 24%, #ffffff 56%)`,
+          }}
+        >
           <div
             style={{
               display: "flex",
-              margin: "40px",
-              fontSize: "50px",
-              color: "#222222",
+              alignItems: "center",
+              marginBottom: "28px",
             }}
           >
-            {
-              // if metaData.favicon is undefined, then don't render the image
-              metaData.favicon && (
+            {favicon ? (
+              <div
+                style={{
+                  display: "flex",
+                  width: "92px",
+                  height: "92px",
+                  borderRadius: "20px",
+                  marginRight: "18px",
+                  overflow: "hidden",
+                  background: "#ffffff",
+                  border: "1px solid rgba(0, 0, 0, 0.08)",
+                }}
+              >
                 <img
-                  width="100"
-                  height="100"
-                  src={metaData.favicon}
+                  width="92"
+                  height="92"
+                  alt=""
+                  src={favicon}
                   style={{
-                    marginRight: "10px",
+                    width: "100%",
+                    height: "100%",
                   }}
                 />
-              )
-            }
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  width: "92px",
+                  height: "92px",
+                  borderRadius: "20px",
+                  marginRight: "18px",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "38px",
+                  fontWeight: "700",
+                  color: "rgba(17, 24, 39, 0.9)",
+                  background: "rgba(255, 255, 255, 0.86)",
+                  border: "1px solid rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                {getMonogram(hostnameLabel)}
+              </div>
+            )}
             <div
               style={{
-                margin: "auto 0px auto 0px",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
-              {shortenString(metaData.site_name, 30)}
+              <div
+                style={{
+                  fontSize: "50px",
+                  color: "#1f2937",
+                  fontWeight: "600",
+                  lineHeight: "1",
+                  marginBottom: "8px",
+                }}
+              >
+                {siteName}
+              </div>
+              <div
+                style={{
+                  fontSize: "26px",
+                  color: "rgba(17, 24, 39, 0.62)",
+                }}
+              >
+                {hostnameLabel}
+              </div>
             </div>
           </div>
           <div
             style={{
-              margin: "0px 40px 0px 40px",
-              minHeight: "100px",
-              maxHeight: "200px",
-              fontSize: "70px",
+              fontSize: "66px",
               fontWeight: "700",
-              color: "#333333",
-              lineHeight: "100%",
+              color: "#111827",
+              lineHeight: "1.08",
               wordBreak: "break-word",
+              marginBottom: "30px",
             }}
           >
-            {shortenString(metaData.title, 60)}
+            {title}
           </div>
           <div
             style={{
-              margin: "40px",
-              fontSize: "30px",
-              color: "#555555",
+              fontSize: "34px",
+              lineHeight: "1.28",
+              color: "rgba(17, 24, 39, 0.72)",
             }}
           >
-            {shortenString(metaData.description, 220)}
+            {description}
+          </div>
+          <div
+            style={{
+              marginTop: "auto",
+              borderTop: "1px solid rgba(17, 24, 39, 0.1)",
+              paddingTop: "18px",
+              fontSize: "20px",
+              color: "rgba(17, 24, 39, 0.45)",
+            }}
+          >
+            Generated by DOGimg
           </div>
         </div>
       ),
