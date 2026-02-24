@@ -38,9 +38,7 @@ export default async function handler(req: NextRequest) {
     const { accentStrong, accentSoft } = getAccentGradientColors(metaData.color);
     const siteName = shortenString(metaData.site_name, 30) || "Website";
     const title = shortenString(metaData.title, 66) || siteName;
-    const description =
-      shortenString(metaData.description, 180) ||
-      "Generate polished Open Graph previews from any webpage URL.";
+    const description = shortenString(metaData.description, 180);
     const hostnameLabel = getHostnameLabel(url);
     const favicon = await resolveRenderableFaviconUrl(metaData.favicon, url);
 
@@ -142,20 +140,22 @@ export default async function handler(req: NextRequest) {
               color: "#111827",
               lineHeight: "1.08",
               wordBreak: "break-word",
-              marginBottom: "30px",
+              marginBottom: description ? "30px" : "0px",
             }}
           >
             {title}
           </div>
-          <div
-            style={{
-              fontSize: "34px",
-              lineHeight: "1.28",
-              color: "rgba(17, 24, 39, 0.72)",
-            }}
-          >
-            {description}
-          </div>
+          {description ? (
+            <div
+              style={{
+                fontSize: "34px",
+                lineHeight: "1.28",
+                color: "rgba(17, 24, 39, 0.72)",
+              }}
+            >
+              {description}
+            </div>
+          ) : null}
           <div
             style={{
               marginTop: "auto",

@@ -46,6 +46,38 @@ test("falls back to no-media theme-color and title tag when OG tags are missing"
   assert.equal(meta.favicon, "https://www.sample.dev/assets/icon.svg");
 });
 
+test("uses description priority: og > twitter > meta description", () => {
+  const htmlWithoutOg = `
+    <html>
+      <head>
+        <title>Document Title</title>
+        <meta name="twitter:description" content="Twitter Description" />
+        <meta name="description" content="Meta Description" />
+      </head>
+    </html>
+  `;
+
+  const metaWithoutOg = getSiteMetaDataFromHTML(
+    "https://example.com",
+    htmlWithoutOg
+  );
+  assert.equal(metaWithoutOg.description, "Twitter Description");
+
+  const htmlWithOg = `
+    <html>
+      <head>
+        <title>Document Title</title>
+        <meta name="twitter:description" content="Twitter Description" />
+        <meta name="description" content="Meta Description" />
+        <meta property="og:description" content="OG Description" />
+      </head>
+    </html>
+  `;
+
+  const metaWithOg = getSiteMetaDataFromHTML("https://example.com", htmlWithOg);
+  assert.equal(metaWithOg.description, "OG Description");
+});
+
 test("ignores unsupported ico favicons and returns default color for invalid theme-color", () => {
   const html = `
     <html>
@@ -61,4 +93,32 @@ test("ignores unsupported ico favicons and returns default color for invalid the
 
   assert.equal(meta.favicon, "");
   assert.equal(meta.color, "#bbbbbb");
+});
+
+test("returns safe defaults when metadata is completely missing", () => {
+  const html = `
+    <html>
+      <body>
+        <div>No metadata here</div>
+      </body>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://empty.example/path", html);
+
+  assert.equal(meta.title, "");
+  assert.equal(meta.description, "");
+  assert.equal(meta.site_name, "empty.example");
+  assert.equal(meta.color, "#bbbbbb");
+  assert.equal(meta.favicon, "");
+});
+
+test("returns safe defaults when html is an empty string", () => {
+  const meta = getSiteMetaDataFromHTML("https://empty-string.example", "");
+
+  assert.equal(meta.title, "");
+  assert.equal(meta.description, "");
+  assert.equal(meta.site_name, "empty-string.example");
+  assert.equal(meta.color, "#bbbbbb");
+  assert.equal(meta.favicon, "");
 });

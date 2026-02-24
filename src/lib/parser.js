@@ -62,6 +62,15 @@ function parseTitleFromRoot(root) {
   return (titleTag && titleTag.text) || "";
 }
 
+function resolveDescription(metaTags) {
+  return (
+    metaTags["og:description"] ||
+    metaTags["twitter:description"] ||
+    metaTags.description ||
+    ""
+  );
+}
+
 function getFaviconUrl(pageUrl, faviconUrl) {
   if (!faviconUrl) {
     return "";
@@ -96,7 +105,7 @@ export const getSiteMetaDataFromHTML = (url, html) => {
 
   return {
     title: metaTags["og:title"] || parseTitleFromRoot(root),
-    description: metaTags["og:description"] || "",
+    description: resolveDescription(metaTags),
     site_name: metaTags["og:site_name"] || getHostname(url),
     color: getValidColor(themeColor),
     favicon: favicon || "",
