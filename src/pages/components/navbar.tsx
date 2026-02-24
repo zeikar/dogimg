@@ -3,19 +3,19 @@ import Image from "next/image";
 export default function Navbar() {
   return (
     <nav className="bg-gray-100">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex justify-between">
           <div className="flex space-x-4">
             <div>
-              <div className="flex items-center py-5 px-2 text-gray-700 hover:text-gray-900">
+              <div className="flex items-center py-3 px-1.5 text-gray-700 hover:text-gray-900">
                 <Image
                   src="/dog.svg"
                   alt="DOGimg Logo"
                   className="rounded-full"
-                  width={40}
-                  height={40}
+                  width={32}
+                  height={32}
                 />
-                <span className="font-bold">DOGimg</span>
+                <span className="ml-1.5 text-base font-bold">DOGimg</span>
               </div>
             </div>
           </div>
@@ -29,8 +29,8 @@ export default function Navbar() {
               <Image
                 src="/github-mark.svg"
                 alt="Github"
-                width={40}
-                height={40}
+                width={30}
+                height={30}
               />
             </a>
           </div>

@@ -75,6 +75,7 @@ export default async function handler(req: NextRequest) {
                   border: "1px solid rgba(0, 0, 0, 0.08)",
                 }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   width="92"
                   height="92"

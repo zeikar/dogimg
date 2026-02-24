@@ -1,18 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 
 interface ClickItemProps {
-  onClick: (event: React.MouseEvent<HTMLSpanElement, MouseEvent>) => void;
+  onSelect: (url: string) => void;
   url: string;
 }
 
-const ClickItem: React.FC<ClickItemProps> = ({ onClick, url }) => {
+const ClickItem: React.FC<ClickItemProps> = ({ onSelect, url }) => {
   return (
-    <span
-      className="text-indigo-600 cursor-pointer p-1 hover:underline inline-block"
-      onClick={onClick}
+    <button
+      type="button"
+      className="inline-block cursor-pointer border-0 bg-transparent p-1 text-indigo-600 hover:underline"
+      onClick={() => onSelect(url)}
     >
       {url}
-    </span>
+    </button>
   );
 };
 

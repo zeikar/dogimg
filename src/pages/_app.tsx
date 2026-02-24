@@ -8,25 +8,25 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>DOGimg - Dynamic Open Graph Image Generator With URL</title>
+        <title>DOGimg - Dynamic Open Graph Images from Any URL</title>
         <meta
           name="title"
-          content="DOGimg - Dynamic Open Graph Image Generator With URL"
+          content="DOGimg - Dynamic Open Graph Images from Any URL"
         />
         <meta
           name="description"
-          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
+          content="Generate polished Open Graph images from any URL in seconds."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dogimg.vercel.app/" />
         <meta property="og:site_name" content="DOGimg" />
         <meta
           property="og:title"
-          content="DOGimg - Dynamic Open Graph Image Generator With URL"
+          content="DOGimg - Dynamic Open Graph Images from Any URL"
         />
         <meta
           property="og:description"
-          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
+          content="Generate polished Open Graph images from any URL in seconds."
         />
         <meta
           property="og:image"
@@ -36,11 +36,11 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta property="twitter:url" content="https://dogimg.vercel.app/" />
         <meta
           property="twitter:title"
-          content="DOGimg - Dynamic Open Graph Image Generator With URL"
+          content="DOGimg - Dynamic Open Graph Images from Any URL"
         />
         <meta
           property="twitter:description"
-          content="A Dynamic Open Graph Image Generator With URL. Effortlessly generate stunning Open Graph Images with just a URL using our API."
+          content="Generate polished Open Graph images from any URL in seconds."
         />
         <meta
           property="twitter:image"
