@@ -9,15 +9,46 @@ test.afterEach(() => {
 });
 
 test("returns response html when status and content-type are valid", async () => {
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
-    text: async () => "<html><body>Hello</body></html>",
-  });
+  let fetchInit;
+
+  globalThis.fetch = async (_url, init) => {
+    fetchInit = init;
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
+      text: async () => "<html><body>Hello</body></html>",
+    };
+  };
 
   const html = await fetchHTML("https://example.com");
   assert.equal(html, "<html><body>Hello</body></html>");
+  assert.equal(fetchInit.headers.get("Accept-Language"), "en-US,en;q=0.9");
+  assert.match(fetchInit.headers.get("User-Agent"), /DOGimgBot\/1\.0/);
+});
+
+test("retries without user-agent when runtime blocks setting it", async () => {
+  const calls = [];
+
+  globalThis.fetch = async (_url, init) => {
+    calls.push(init);
+    if (calls.length === 1) {
+      throw new TypeError('Refused to set unsafe header "User-Agent"');
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
+      text: async () => "<html><body>Hello</body></html>",
+    };
+  };
+
+  const html = await fetchHTML("https://example.com");
+  assert.equal(html, "<html><body>Hello</body></html>");
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].headers.get("User-Agent"), /DOGimgBot\/1\.0/);
+  assert.equal(calls[1].headers.get("User-Agent"), null);
 });
 
 test("throws when response status is not ok", async () => {
