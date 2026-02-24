@@ -49,15 +49,16 @@ export default async function handler(req: NextRequest) {
     return new ImageResponse(
       (
         <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            height: "100%",
-            // linear-gradient
-            background: `linear-gradient(0, ${metaData.color} 0%, #ffffff 30%)`,
-          }}
-        >
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              height: "100%",
+              backgroundColor: "#ffffff",
+              // Keep accent color at the bottom, fading to white toward the top.
+              backgroundImage: `linear-gradient(to top, ${metaData.color} 0%, #ffffff 30%)`,
+            }}
+          >
           <div
             style={{
               display: "flex",
