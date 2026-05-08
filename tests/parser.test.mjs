@@ -122,3 +122,63 @@ test("returns safe defaults when html is an empty string", () => {
   assert.equal(meta.color, "#bbbbbb");
   assert.equal(meta.favicon, "");
 });
+
+test("picks the largest sized favicon when multiple are declared", () => {
+  const html = `
+    <html>
+      <head>
+        <title>Multi-size icons</title>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.favicon, "https://example.com/android-chrome-192x192.png");
+});
+
+test("prefers SVG icon over larger raster icons", () => {
+  const html = `
+    <html>
+      <head>
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.favicon, "https://example.com/icon.svg");
+});
+
+test("treats sizes=\"any\" as a high-priority candidate", () => {
+  const html = `
+    <html>
+      <head>
+        <link rel="icon" type="image/png" sizes="32x32" href="/small.png" />
+        <link rel="icon" sizes="any" href="/scalable.png" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.favicon, "https://example.com/scalable.png");
+});
+
+test("uses apple-touch-icon when no sized icons are present", () => {
+  const html = `
+    <html>
+      <head>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/icon.png" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.favicon, "https://example.com/apple-touch-icon.png");
+});

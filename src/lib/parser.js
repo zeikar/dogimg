@@ -42,19 +42,67 @@ function parseThemeColorFromRoot(root) {
   return themeColorTags[0].getAttribute("content");
 }
 
+function scoreFaviconCandidate(tag) {
+  const rel = (tag.getAttribute("rel") || "").toLowerCase();
+  const type = (tag.getAttribute("type") || "").toLowerCase();
+  const sizes = (tag.getAttribute("sizes") || "").toLowerCase().trim();
+
+  // SVG is resolution-independent — always preferred when available.
+  if (type === "image/svg+xml") {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  // sizes="any" typically marks a vector or multi-resolution asset.
+  if (sizes === "any") {
+    return Number.MAX_SAFE_INTEGER - 1;
+  }
+
+  // Pick the largest declared dimension, e.g. "192x192" or "16x16 32x32".
+  let bestArea = 0;
+  for (const match of sizes.matchAll(/(\d+)\s*x\s*(\d+)/g)) {
+    const area = Number(match[1]) * Number(match[2]);
+    if (area > bestArea) {
+      bestArea = area;
+    }
+  }
+
+  if (bestArea > 0) {
+    return bestArea;
+  }
+
+  // Apple touch icons are conventionally 180x180 even when sizes is omitted.
+  if (rel.includes("apple-touch-icon")) {
+    return 180 * 180;
+  }
+
+  return 0;
+}
+
 function parseFaviconFromRoot(root) {
-  const linkTags = root.querySelectorAll("link");
-  const faviconTag = linkTags.find((tag) => {
+  const candidates = root.querySelectorAll("link").filter((tag) => {
     const rel = (tag.getAttribute("rel") || "").toLowerCase();
     const href = tag.getAttribute("href") || "";
-    return rel.includes("icon") && href && !/\.ico($|\?)/i.test(href);
+    if (!href || /\.ico($|\?)/i.test(href)) {
+      return false;
+    }
+    return rel.includes("icon");
   });
 
-  if (!faviconTag) {
+  if (candidates.length === 0) {
     return "";
   }
 
-  return faviconTag.getAttribute("href");
+  let best = candidates[0];
+  let bestScore = scoreFaviconCandidate(best);
+  for (let i = 1; i < candidates.length; i++) {
+    const score = scoreFaviconCandidate(candidates[i]);
+    if (score > bestScore) {
+      best = candidates[i];
+      bestScore = score;
+    }
+  }
+
+  return best.getAttribute("href");
 }
 
 function parseTitleFromRoot(root) {
