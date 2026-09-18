@@ -1,11 +1,9 @@
 import React, { useState } from "react";
+import { getOgImageUrl } from "@/lib/og-url";
 
 interface ClipboardProps {
   url: string;
 }
-
-const getOgImageUrl = (url: string) =>
-  `https://dogimg.vercel.app/api/og?url=${url}`;
 
 const escapeHtmlAttribute = (value: string) =>
   value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
