@@ -34,13 +34,19 @@ export default async function handler(req: NextRequest) {
     const url = getURLFromRequest(req);
     const html = await fetchHTML(url);
     const metaData = getSiteMetaDataFromHTML(url, html);
-    console.log(metaData);
     const { accentStrong, accentSoft } = getAccentGradientColors(metaData.color);
     const siteName = shortenString(metaData.site_name, 30) || "Website";
     const title = shortenString(metaData.title, 66) || siteName;
     const description = shortenString(metaData.description, 180);
     const hostnameLabel = getHostnameLabel(url);
     const favicon = await resolveRenderableFaviconUrl(metaData.favicon, url);
+
+    // Never log `favicon` itself: it is a base64 data URL, often megabytes.
+    console.log(
+      `[og] url=${url} site="${siteName}" title="${title}" desc=${description.length} ` +
+        `color=${metaData.color} faviconSrc=${metaData.favicon || "none"} ` +
+        `faviconResolved=${favicon ? "yes" : "no"}`
+    );
 
     return new ImageResponse(
       (
@@ -164,8 +170,8 @@ export default async function handler(req: NextRequest) {
         height: 630,
       }
     );
-  } catch (e: any) {
-    console.log(`${e.message}`);
+  } catch (e) {
+    console.error("[og] failed to generate the image:", e);
     return new Response(`Failed to generate the image`, {
       status: 500,
     });
