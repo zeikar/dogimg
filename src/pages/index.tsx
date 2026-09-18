@@ -4,15 +4,15 @@ import Heading from "./components/heading";
 import PreviewImage from "./components/preview";
 import InputForm from "./components/inputForm";
 import Clipboard from "./components/clipboard";
+import { getOgImagePath } from "@/lib/og-url";
 
 export default function Home() {
   const [ogApi, setOgApi] = React.useState("");
   const [url, setUrl] = React.useState("");
 
-  const handleGenerate = (url: string) => {
-    console.log("Generate", url);
-    setUrl(url);
-    setOgApi(`/api/og?url=${encodeURIComponent(url)}`);
+  const handleGenerate = (targetUrl: string) => {
+    setUrl(targetUrl);
+    setOgApi(getOgImagePath(targetUrl));
   };
 
   return (
