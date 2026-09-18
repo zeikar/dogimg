@@ -91,3 +91,32 @@ test("limits returned html size to 2,000,000 characters", async () => {
   const html = await fetchHTML("https://example.com");
   assert.equal(html.length, 2_000_000);
 });
+
+test("rejects content when redirects land on a private address", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    // Where the request ended up after following redirects.
+    url: "http://169.254.169.254/latest/meta-data/",
+    headers: new Headers({ "content-type": "text/html" }),
+    text: async () => "<html><body>instance metadata</body></html>",
+  });
+
+  await assert.rejects(
+    () => fetchHTML("https://totally-public.example"),
+    /private or local address/
+  );
+});
+
+test("accepts content when redirects land on another public address", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    url: "https://www.example.com/landing",
+    headers: new Headers({ "content-type": "text/html" }),
+    text: async () => "<html><body>Hello</body></html>",
+  });
+
+  const html = await fetchHTML("https://example.com");
+  assert.equal(html, "<html><body>Hello</body></html>");
+});
