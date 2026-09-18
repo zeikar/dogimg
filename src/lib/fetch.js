@@ -1,3 +1,5 @@
+import { assertPublicHttpUrl } from "./target-url.js";
+
 const BROWSER_LIKE_HEADERS = {
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
@@ -57,6 +59,10 @@ export const fetchHTML = async (url) => {
     const response = await fetchWithBrowserHeaders(url, {
       signal: controller.signal,
     });
+
+    // Redirects are followed, so the request can land somewhere the caller
+    // never asked for. Re-check before any of that content reaches the image.
+    assertPublicHttpUrl(response.url || url);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch HTML: ${response.status}`);
