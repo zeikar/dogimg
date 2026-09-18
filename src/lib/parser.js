@@ -149,8 +149,6 @@ export const getSiteMetaDataFromHTML = (url, html) => {
   const favicon = getFaviconUrl(url, parseFaviconFromRoot(root));
   const themeColor = parseThemeColorFromRoot(root);
 
-  console.log(url, metaTags, favicon, themeColor);
-
   return {
     title: metaTags["og:title"] || parseTitleFromRoot(root),
     description: resolveDescription(metaTags),
