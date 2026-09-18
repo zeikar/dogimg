@@ -1,5 +1,10 @@
 import { fetchWithBrowserHeaders } from "@/lib/fetch";
 
+const FAVICON_TIMEOUT_MS = 5000;
+// Favicons are small by nature; anything larger is either broken or hostile.
+// The whole payload is held in memory twice (raw bytes + base64 data URL).
+const MAX_FAVICON_BYTES = 2 * 1024 * 1024;
+
 const SUPPORTED_FAVICON_MIME_TYPES = new Set([
   "image/png",
   "image/jpeg",
@@ -28,11 +33,48 @@ function resolveFaviconUrl(favicon: string, pageUrl: string) {
 }
 
 function bytesToBase64(bytes: Uint8Array) {
+  // Chunked so we never spread more args than String.fromCharCode accepts.
+  const chunkSize = 0x8000;
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
   }
   return btoa(binary);
+}
+
+// Stops reading as soon as the limit is passed, so a chunked response that
+// never declares content-length can't stream unbounded data into memory.
+async function readBodyWithLimit(response: Response, maxBytes: number) {
+  if (!response.body) {
+    const buffer = await response.arrayBuffer();
+    return buffer.byteLength > maxBytes ? null : new Uint8Array(buffer);
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    total += value.length;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return merged;
 }
 
 function detectFaviconMimeType(bytes: Uint8Array, contentType: string) {
@@ -91,11 +133,15 @@ async function fetchImageAsDataUrl(imageUrl: string) {
     return "";
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FAVICON_TIMEOUT_MS);
+
   try {
     const response = await fetchWithBrowserHeaders(imageUrl, {
       headers: {
         Accept: "image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8",
       },
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -107,7 +153,16 @@ async function fetchImageAsDataUrl(imageUrl: string) {
       return "";
     }
 
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    const declaredLength = Number(response.headers.get("content-length"));
+    if (declaredLength > MAX_FAVICON_BYTES) {
+      return "";
+    }
+
+    const bytes = await readBodyWithLimit(response, MAX_FAVICON_BYTES);
+    if (!bytes) {
+      return "";
+    }
+
     const mimeType = detectFaviconMimeType(bytes, contentType);
     if (!mimeType) {
       return "";
@@ -116,6 +171,8 @@ async function fetchImageAsDataUrl(imageUrl: string) {
     return `data:${mimeType};base64,${bytesToBase64(bytes)}`;
   } catch {
     return "";
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
