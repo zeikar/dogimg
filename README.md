@@ -2,9 +2,10 @@
 
 Turn any URL into an Open Graph image.
 
-DOGimg reads a page's title, description, icon and theme color, and draws a
-1200x630 card from them. Point your `og:image` at one URL and every page gets
-its own preview. Nothing to design, nothing to deploy.
+Add one `og:image` tag, and every page you share gets its own preview card: its
+title, its icon, its color. Nothing to design, nothing to deploy.
+
+DOGimg is short for Dynamic Open Graph image.
 
 ## Try It
 
