@@ -1,6 +1,4 @@
-User-Agent: *
+User-agent: *
 Allow: /
-Disallow: /_next/
 
-Host: https://dogimg.vercel.app
 Sitemap: https://dogimg.vercel.app/sitemap.xml

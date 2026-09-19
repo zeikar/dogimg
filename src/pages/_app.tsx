@@ -7,6 +7,12 @@ import { SITE_URL, getOgImageUrl } from "@/lib/og-url";
 
 const SITE_HOME = `${SITE_URL}/`;
 const SITE_OG_IMAGE = getOgImageUrl(SITE_HOME);
+const PAGE_TITLE = "DOGimg: Open Graph Image Generator for Any URL";
+// The brand goes in og:site_name, which the card (and most unfurls) show
+// separately from the title.
+const SHARE_TITLE = "Turn any URL into an Open Graph image";
+const DESCRIPTION =
+  "Paste a link, get a 1200×630 Open Graph image drawn from the page's title, description, favicon and theme color. A free API: one URL, no design work.";
 
 // The same files the cards are rendered with, so the page and its output share
 // a typeface.
@@ -23,38 +29,24 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>DOGimg - Dynamic Open Graph Images from Any URL</title>
-        <meta
-          name="title"
-          content="DOGimg - Dynamic Open Graph Images from Any URL"
-        />
-        <meta
-          name="description"
-          content="Generate polished Open Graph images from any URL in seconds."
-        />
+        <title>{PAGE_TITLE}</title>
+        <meta name="description" content={DESCRIPTION} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={SITE_HOME} />
         <meta property="og:site_name" content="DOGimg" />
-        <meta
-          property="og:title"
-          content="DOGimg - Dynamic Open Graph Images from Any URL"
-        />
-        <meta
-          property="og:description"
-          content="Generate polished Open Graph images from any URL in seconds."
-        />
+        <meta property="og:title" content={SHARE_TITLE} />
+        <meta property="og:description" content={DESCRIPTION} />
         <meta property="og:image" content={SITE_OG_IMAGE} />
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={SITE_HOME} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
-          property="twitter:title"
-          content="DOGimg - Dynamic Open Graph Images from Any URL"
+          property="og:image:alt"
+          content="The Open Graph card DOGimg generates for its own home page"
         />
-        <meta
-          property="twitter:description"
-          content="Generate polished Open Graph images from any URL in seconds."
-        />
-        <meta property="twitter:image" content={SITE_OG_IMAGE} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SHARE_TITLE} />
+        <meta name="twitter:description" content={DESCRIPTION} />
+        <meta name="twitter:image" content={SITE_OG_IMAGE} />
         <link rel="canonical" href={SITE_HOME} />
         <link rel="apple-touch-icon" href="/dog.svg" />
         <meta name="theme-color" content="#67e8f9" />
@@ -62,7 +54,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="msapplication-TileImage" content="/dog.svg" />
         <meta name="application-name" content="DOGimg" />
         <meta name="apple-mobile-web-app-title" content="DOGimg" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/dog.svg" />
       </Head>

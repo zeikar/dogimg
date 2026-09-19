@@ -16,6 +16,9 @@ export default function Navbar() {
       </div>
 
       <nav aria-label="Site" className="flex items-center gap-5 text-sm font-bold">
+        <a className="underline-offset-4 hover:underline" href="#api">
+          API
+        </a>
         <a
           className="flex items-center gap-2 underline-offset-4 hover:underline"
           href="https://github.com/zeikar/dogimg"
