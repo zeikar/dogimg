@@ -13,3 +13,7 @@ export const getOgImagePath = (url: string) =>
   `/api/og?url=${encodeURIComponent(url)}`;
 
 export const getOgImageUrl = (url: string) => `${SITE_URL}${getOgImagePath(url)}`;
+
+// Set to "1" on a fallback card. It is a 200 and a PNG like any other card, so
+// without this a caller can't tell that the page was never read.
+export const FALLBACK_HEADER = "x-dogimg-fallback";

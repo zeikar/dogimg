@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { rgbToHsl } from "@/lib/color.js";
-import { getOgImagePath } from "@/lib/og-url";
+import { FALLBACK_HEADER, getOgImagePath } from "@/lib/og-url";
 
 interface PreviewImageProps {
   url: string;
@@ -9,7 +9,8 @@ interface PreviewImageProps {
   attempt: number;
   isExample: boolean;
   // Told which requested card made it to the screen, so the snippets beside it
-  // never offer a tag for a URL that produced no card.
+  // never offer a tag for a URL that produced no card. Empty for a fallback
+  // card: the page behind it was never read.
   onShown: (url: string) => void;
 }
 
@@ -51,39 +52,61 @@ function followAccent(image: HTMLImageElement) {
 const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, onShown }) => {
   const src = getOgImagePath(url);
   // Starts out showing the first card, so it is part of the server-rendered
-  // page instead of arriving after hydration.
-  const [displayed, setDisplayed] = React.useState({ src, url });
-  const [failedAttempt, setFailedAttempt] = React.useState(-1);
-  const failed = failedAttempt === attempt;
-  const loading = src !== displayed.src && !failed;
+  // page instead of arriving after hydration. That one is never fetched from
+  // here, so whether it is a fallback is not known; it is taken not to be.
+  const [displayed, setDisplayed] = React.useState({ src, url, fallback: false, attempt });
+  const [failure, setFailure] = React.useState({ attempt: -1, reason: "" });
+  const failed = failure.attempt === attempt;
+  // A fallback is worth asking for again: the page behind it may be back.
+  const upToDate =
+    src === displayed.src && !(displayed.fallback && displayed.attempt !== attempt);
+  const loading = !upToDate && !failed;
 
   // The card on screen stays until the next one has loaded.
   React.useEffect(() => {
-    if (src === displayed.src) {
+    if (upToDate) {
       if (attempt > 0) {
-        onShown(url);
+        onShown(displayed.fallback ? "" : url);
       }
       return;
     }
 
-    let cancelled = false;
-    const preloader = new window.Image();
-    preloader.onload = () => {
-      if (!cancelled) {
-        setDisplayed({ src, url });
-      }
-    };
-    preloader.onerror = () => {
-      if (!cancelled) {
-        setFailedAttempt(attempt);
-      }
-    };
-    preloader.src = src;
+    // fetch rather than an Image(): only a response shows its status and the
+    // header that marks a fallback card.
+    const controller = new AbortController();
+    fetch(src, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          // A 400 carries the API's own one-line reason; anything else may be
+          // a whole error page.
+          const reason = response.status === 400 ? await response.text() : "";
+          if (!controller.signal.aborted) {
+            setFailure({ attempt, reason });
+          }
+          return;
+        }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [src, url, attempt, displayed.src, onShown]);
+        // Read to the end, so the <img> below is served from the browser cache.
+        // An Image() would have refused a body that isn't one; fetch doesn't.
+        const body = await response.blob();
+        if (controller.signal.aborted) {
+          return;
+        }
+        if (!body.type.startsWith("image/") || body.size === 0) {
+          setFailure({ attempt, reason: "" });
+          return;
+        }
+        setDisplayed({ src, url, fallback: response.headers.has(FALLBACK_HEADER), attempt });
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          console.error(error);
+          setFailure({ attempt, reason: "" });
+        }
+      });
+
+    return () => controller.abort();
+  }, [src, url, attempt, upToDate, displayed.fallback, onShown]);
 
   // On a phone the card sits below the fold, so a new request brings it up.
   const figure = React.useRef<HTMLElement>(null);
@@ -93,18 +116,26 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, on
     }
   }, [attempt]);
 
+  const problem = !loading && (failed || displayed.fallback);
   let status = `${isExample ? "An example: the" : "The"} card for ${describeUrl(displayed.url)}`;
   if (loading) {
     status = `Fetching ${describeUrl(url)}…`;
   } else if (failed) {
-    status = `No card for ${describeUrl(url)}. DOGimg only reads public http(s) pages; check the address and try again.`;
+    status = `No card for ${describeUrl(url)}. ${
+      failure.reason || "The request didn't go through. Try again in a moment."
+    }`;
+  } else if (displayed.fallback) {
+    status = `DOGimg couldn't read ${describeUrl(displayed.url)}, so this is the plain card it falls back to. Check the address, and that the page is public and answers with HTML.`;
   }
 
   return (
     <figure ref={figure} className="scroll-my-6">
       <div className="relative aspect-[1200/630] overflow-hidden rounded-xl border border-line bg-white shadow-[0_1px_2px_hsl(var(--hue)_35%_10%/0.08),0_14px_28px_-18px_hsl(var(--hue)_35%_10%/0.3)]">
         <Image
-          src={displayed.src}
+          // The fragment never reaches the server. It makes the address differ
+          // when the same URL was fetched again, which is what gets an <img>
+          // to look at the cache again instead of keeping what it has.
+          src={displayed.attempt ? `${displayed.src}#${displayed.attempt}` : displayed.src}
           alt={`Open Graph card generated for ${describeUrl(displayed.url)}`}
           fill
           unoptimized
@@ -119,7 +150,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, on
       <figcaption
         aria-live="polite"
         className={`mt-3 text-sm [overflow-wrap:anywhere] ${
-          failed ? "font-bold text-red-700" : "text-muted"
+          problem ? "font-bold text-red-700" : "text-muted"
         }`}
       >
         {status}

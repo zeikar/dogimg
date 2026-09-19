@@ -13,6 +13,7 @@ import {
   stripSiteName,
 } from "@/lib/og-card";
 import { FONT_STACK, loadCardFonts } from "@/lib/og-fonts";
+import { FALLBACK_HEADER } from "@/lib/og-url";
 
 const DEFAULT_TARGET_URL = "https://github.com/zeikar/dogimg";
 
@@ -191,7 +192,7 @@ async function renderFallbackCard(url: string) {
     {
       ...IMAGE_SIZE,
       fonts: await loadCardFonts(hostnameLabel),
-      headers: { "cache-control": FALLBACK_CACHE_CONTROL },
+      headers: { "cache-control": FALLBACK_CACHE_CONTROL, [FALLBACK_HEADER]: "1" },
     }
   );
 }
