@@ -170,3 +170,46 @@ test("never strips a title down to nothing", () => {
   assert.equal(stripSiteName("YouTube", "YouTube", "youtube.com"), "YouTube");
   assert.equal(stripSiteName("Acme | Acme", "Acme", "acme.io"), "Acme");
 });
+
+test("splits on the separators Japanese and Korean sites use", () => {
+  // A full-width or tight pipe needs no spaces around it.
+  assert.equal(stripSiteName("ニュース｜Acme", "Acme", "acme.jp"), "ニュース");
+  assert.equal(stripSiteName("Pricing|Acme", "Acme", "acme.io"), "Pricing");
+  for (const separator of [":", "::", "»", "/"]) {
+    assert.equal(
+      stripSiteName(`공지사항 ${separator} Acme`, "Acme", "acme.kr"),
+      "공지사항"
+    );
+  }
+  // ...but a colon or slash inside running text is not a separator.
+  assert.equal(stripSiteName("Acme: a history", "Acme", "acme.io"), "Acme: a history");
+  assert.equal(stripSiteName("TCP/IP basics", "IP basics", "x.io"), "TCP/IP basics");
+});
+
+test("takes only the registrable label of a hostname for the site", () => {
+  // "com" and "co" belong to the public suffix, not to the brand.
+  assert.equal(
+    stripSiteName("COM - Component Object Model", "example.com.au", "example.com.au"),
+    "COM - Component Object Model"
+  );
+  assert.equal(
+    stripSiteName("Example - About", "example.com.au", "example.com.au"),
+    "About"
+  );
+  // A short brand is still the brand: only known suffix labels are skipped.
+  assert.equal(stripSiteName("IBM - Cloud", "news.ibm.com", "news.ibm.com"), "Cloud");
+  // A subdomain is not the brand either.
+  assert.equal(
+    stripSiteName("News - Today's stories", "news.example.com", "news.example.com"),
+    "News - Today's stories"
+  );
+});
+
+test("handles a title padded with a huge run of whitespace in linear time", () => {
+  // `\s+sep\s+` backtracked quadratically here: 3s at 80k spaces.
+  // The run must NOT end in a separator, or the first attempt just succeeds.
+  const title = `Pricing${" ".repeat(200_000)}plans | Acme`;
+  const start = performance.now();
+  assert.equal(stripSiteName(title, "Acme", "acme.io"), "Pricing plans");
+  assert.ok(performance.now() - start < 500);
+});

@@ -40,12 +40,32 @@ export function shortenString(str: string, maxLength: number) {
   return `${sliced.trim()}...`;
 }
 
-// " | ", " - ", " · " and friends. The surrounding spaces are required, so a
-// hyphenated word is never mistaken for a separator.
-const TITLE_SEPARATOR = /\s+[|\-–—·•]\s+/g;
+// Matched against a title whose whitespace is already collapsed, so there is
+// no `\s+` here to backtrack over. A pipe is a separator even with no spaces
+// around it (the norm on Japanese sites, full-width included); everything else
+// needs them, or "Self-hosting" and "TCP/IP" would split.
+const TITLE_SEPARATOR = / ?[|｜] ?| (?:[-–—·•»/]|::?) /g;
+// Far beyond anything the card can show; it only bounds the work done here.
+const MAX_TITLE_LENGTH = 300;
 
 function normalizeName(text: string) {
   return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+// The labels that sit between a brand and a country TLD: example.co.kr,
+// example.com.au. Without a public-suffix list, this is what keeps "co" from
+// being read as the brand.
+const SECOND_LEVEL_SUFFIXES = new Set([
+  "ac", "co", "com", "edu", "go", "gov", "ne", "net", "or", "org",
+]);
+
+// "stripe" for stripe.com, "example" for news.example.com.au.
+function getBrandLabel(hostnameLabel: string) {
+  const labels = hostnameLabel.split(".").slice(0, -1);
+  if (labels.length > 1 && SECOND_LEVEL_SUFFIXES.has(labels[labels.length - 1])) {
+    labels.pop();
+  }
+  return labels[labels.length - 1] ?? "";
 }
 
 function namesSite(segment: string, siteName: string, hostnameLabel: string) {
@@ -56,15 +76,11 @@ function namesSite(segment: string, siteName: string, hostnameLabel: string) {
   if (key === normalizeName(siteName)) {
     return true;
   }
-  // The looser matches below need some length to mean anything: "co" out of
-  // example.co.kr must not claim a title that starts with "Co".
+  // The looser matches below need some length to mean anything.
   if (key.length < 3) {
     return false;
   }
-
-  // "Stripe" for stripe.com — every label but the TLD.
-  const hostLabels = hostnameLabel.split(".").slice(0, -1);
-  if (hostLabels.some((label) => normalizeName(label) === key)) {
+  if (key === normalizeName(getBrandLabel(hostnameLabel))) {
     return true;
   }
 
@@ -75,10 +91,12 @@ function namesSite(segment: string, siteName: string, hostnameLabel: string) {
 // Pages routinely append or prepend their own name to the title. The card's
 // header already says whose page it is, so repeating it only shrinks the type.
 export function stripSiteName(
-  title: string,
+  rawTitle: string,
   siteName: string,
   hostnameLabel: string
 ) {
+  // The title comes straight out of someone else's HTML and can be megabytes.
+  const title = rawTitle.replace(/\s+/g, " ").trim().slice(0, MAX_TITLE_LENGTH);
   const separators = [...title.matchAll(TITLE_SEPARATOR)];
   if (separators.length === 0) {
     return title;
