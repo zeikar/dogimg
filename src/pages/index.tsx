@@ -4,7 +4,7 @@ import Heading from "@/components/heading";
 import PreviewImage from "@/components/preview";
 import InputForm from "@/components/inputForm";
 import Clipboard from "@/components/clipboard";
-import { ApiReference, Faq, FAQ_ITEMS, HowItWorks } from "@/components/docs";
+import { ApiReference, Faq, FAQ_ITEMS } from "@/components/docs";
 import { SITE_URL } from "@/lib/og-url";
 
 // Shown until the visitor generates a card of their own, so the page never
@@ -57,7 +57,6 @@ export default function Home() {
           />
           <Clipboard url={shownUrl} />
         </div>
-        <HowItWorks />
         <ApiReference />
         <Faq />
       </main>
