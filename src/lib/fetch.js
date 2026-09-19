@@ -10,12 +10,23 @@ const BROWSER_LIKE_HEADERS = {
     "Mozilla/5.0 (compatible; DOGimgBot/1.0; +https://dogimg.vercel.app)",
 };
 
+// Some runtimes refuse a caller supplied User-Agent and throw instead of
+// ignoring it, so the request never leaves and resending without the header
+// costs nothing. Everything else has to propagate: fetch reports ordinary
+// network failures as TypeError too, and retrying one would send it twice.
 function shouldRetryWithoutUserAgent(error) {
   const message = String(error?.message || error || "").toLowerCase();
+  if (message.includes("user-agent")) {
+    return true;
+  }
+
+  // A restriction names the header it is about; a bare "forbidden" is a
+  // transport error, and a 403 response does not reach here at all.
   return (
-    message.includes("user-agent") ||
-    message.includes("forbidden") ||
-    message.includes("immutable")
+    message.includes("header") &&
+    (message.includes("forbidden") ||
+      message.includes("immutable") ||
+      message.includes("unsafe"))
   );
 }
 

@@ -120,3 +120,47 @@ test("accepts content when redirects land on another public address", async () =
   const html = await fetchHTML("https://example.com");
   assert.equal(html, "<html><body>Hello</body></html>");
 });
+
+test("retries for other header restriction wordings", async () => {
+  for (const message of [
+    "Refused to set unsafe header",
+    "immutable headers cannot be modified",
+    "forbidden header name",
+  ]) {
+    let calls = 0;
+    globalThis.fetch = async (_url, init) => {
+      calls += 1;
+      if (calls === 1) {
+        throw new TypeError(message);
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ "content-type": "text/html" }),
+        text: async () => "<html></html>",
+      };
+    };
+
+    await fetchHTML("https://example.com");
+    assert.equal(calls, 2, `expected a retry for: ${message}`);
+  }
+});
+
+test("does not retry an ordinary network failure", async () => {
+  // fetch reports transport errors as TypeError as well, and the message can
+  // mention "forbidden" without a header being involved. Resending would just
+  // double the request.
+  for (const message of [
+    "fetch failed",
+    "request to https://example.com failed, reason: forbidden by proxy",
+  ]) {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls += 1;
+      throw new TypeError(message);
+    };
+
+    await assert.rejects(() => fetchHTML("https://example.com"));
+    assert.equal(calls, 1, `expected no retry for: ${message}`);
+  }
+});
