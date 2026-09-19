@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchHTML } from "../src/lib/fetch.js";
+import { fetchHTML, fetchPublicUrl } from "../src/lib/fetch.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -163,4 +163,57 @@ test("does not retry an ordinary network failure", async () => {
     await assert.rejects(() => fetchHTML("https://example.com"));
     assert.equal(calls, 1, `expected no retry for: ${message}`);
   }
+});
+
+test("never sends a request to a private address", async () => {
+  // A page controls its own <link rel="icon">, so these reach the fetcher as
+  // favicon URLs. Rejecting the response afterwards would be too late: the
+  // request itself is what reaches the internal service.
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return { ok: true, status: 200, url: "", headers: new Headers() };
+  };
+
+  for (const url of [
+    "http://169.254.169.254/latest/meta-data/",
+    "http://127.0.0.1:8080/icon.png",
+    "http://10.0.0.5/favicon.png",
+    "http://localhost/favicon.svg",
+    "http://printer.internal/logo.png",
+    "file:///etc/passwd",
+    "ftp://example.com/icon.png",
+  ]) {
+    await assert.rejects(fetchPublicUrl(url), /private or local|not an http/);
+  }
+  assert.equal(requests, 0);
+});
+
+test("rejects a public url that redirects to a private address", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    url: "http://192.168.0.1/admin/logo.png",
+    headers: new Headers({ "content-type": "image/png" }),
+  });
+
+  await assert.rejects(
+    fetchPublicUrl("https://example.com/favicon.png"),
+    /private or local/
+  );
+});
+
+test("passes a public url through with the caller's init", async () => {
+  let seen;
+  globalThis.fetch = async (url, init) => {
+    seen = { url, init };
+    return { ok: true, status: 200, url, headers: new Headers() };
+  };
+
+  const response = await fetchPublicUrl("https://example.com/favicon.png", {
+    headers: { Accept: "image/*" },
+  });
+  assert.equal(response.ok, true);
+  assert.equal(seen.url, "https://example.com/favicon.png");
+  assert.equal(seen.init.headers.get("Accept"), "image/*");
 });

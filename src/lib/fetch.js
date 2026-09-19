@@ -61,19 +61,24 @@ export async function fetchWithBrowserHeaders(url, init = {}) {
   }
 }
 
+// For any URL that did not come from this service itself. Checked before the
+// request, because reaching a private address is the harm whether or not the
+// response is used; and after it, because redirects are followed and can land
+// somewhere the caller never asked for.
+export async function fetchPublicUrl(url, init) {
+  assertPublicHttpUrl(url);
+  const response = await fetchWithBrowserHeaders(url, init);
+  assertPublicHttpUrl(response.url || url);
+  return response;
+}
+
 // get html from url
 export const fetchHTML = async (url) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const response = await fetchWithBrowserHeaders(url, {
-      signal: controller.signal,
-    });
-
-    // Redirects are followed, so the request can land somewhere the caller
-    // never asked for. Re-check before any of that content reaches the image.
-    assertPublicHttpUrl(response.url || url);
+    const response = await fetchPublicUrl(url, { signal: controller.signal });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch HTML: ${response.status}`);

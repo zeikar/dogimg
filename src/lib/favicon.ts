@@ -1,4 +1,5 @@
-import { fetchWithBrowserHeaders } from "@/lib/fetch";
+import { fetchPublicUrl } from "@/lib/fetch";
+import { InvalidTargetUrlError } from "@/lib/target-url";
 import { isRenderableIconHref } from "@/lib/icon-href";
 import { getDominantIconColor } from "@/lib/icon-color";
 
@@ -138,12 +139,18 @@ async function fetchFavicon(imageUrl: string) {
   const timeout = setTimeout(() => controller.abort(), FAVICON_TIMEOUT_MS);
 
   try {
-    const response = await fetchWithBrowserHeaders(imageUrl, {
+    const init = {
       headers: {
         Accept: "image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8",
       },
       signal: controller.signal,
-    });
+    };
+    // The icon URL is lifted out of the fetched page, so it is exactly as
+    // untrusted as the page URL: <link rel="icon" href="http://10.0.0.5/…">
+    // must not be requested. An inline data: icon never touches the network.
+    const response = imageUrl.startsWith("data:")
+      ? await fetch(imageUrl, init)
+      : await fetchPublicUrl(imageUrl, init);
 
     if (!response.ok) {
       return NO_FAVICON;
@@ -173,7 +180,12 @@ async function fetchFavicon(imageUrl: string) {
       src: `data:${mimeType};base64,${bytesToBase64(bytes)}`,
       color: getDominantIconColor(bytes, mimeType),
     };
-  } catch {
+  } catch (e) {
+    // An unreachable icon is routine and stays quiet; a refused one is a page
+    // pointing this service at a private address, which is worth a trace.
+    if (e instanceof InvalidTargetUrlError) {
+      console.warn(`[og] refused favicon url: ${e.message}`);
+    }
     return NO_FAVICON;
   } finally {
     clearTimeout(timeout);
