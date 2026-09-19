@@ -10,6 +10,7 @@ import {
   getMonogram,
   getTitleFontSize,
   shortenString,
+  stripSiteName,
 } from "@/lib/og-card";
 import { FONT_STACK, loadCardFonts } from "@/lib/og-fonts";
 
@@ -220,7 +221,11 @@ export default async function handler(req: NextRequest) {
     const metaData = getSiteMetaDataFromHTML(url, html);
     const palette = getCardPalette(metaData.color, hostnameLabel);
     const siteName = shortenString(metaData.site_name, 30) || "Website";
-    const title = shortenString(metaData.title, 66) || siteName;
+    const title =
+      shortenString(
+        stripSiteName(metaData.title, metaData.site_name, hostnameLabel),
+        66
+      ) || siteName;
     const description = shortenString(metaData.description, 180);
     const [favicon, fonts] = await Promise.all([
       resolveRenderableFaviconUrl(metaData.favicon, url),

@@ -4,6 +4,7 @@ import {
   getCardPalette,
   getTitleFontSize,
   shortenString,
+  stripSiteName,
 } from "../src/lib/og-card.ts";
 
 // Same seed throughout, so any difference comes from the color argument.
@@ -114,4 +115,58 @@ test("steps the title size down as the title gets longer", () => {
 test("counts CJK characters double when sizing the title", () => {
   // 13 characters, but as wide as 26 Latin ones: too long for the top tier.
   assert.equal(getTitleFontSize("가나다라마바사아자차카타파"), 72);
+});
+
+test("drops the site name from either end of a title", () => {
+  assert.equal(
+    stripSiteName("Agentic Infrastructure - Vercel", "Vercel", "vercel.com"),
+    "Agentic Infrastructure"
+  );
+  assert.equal(
+    stripSiteName("GitHub · Change is constant.", "GitHub", "github.com"),
+    "Change is constant."
+  );
+  for (const separator of ["|", "-", "–", "—", "·", "•"]) {
+    assert.equal(
+      stripSiteName(`Pricing ${separator} Acme`, "Acme", "acme.io"),
+      "Pricing"
+    );
+  }
+});
+
+test("recognizes the site by its hostname when the page names no site", () => {
+  // Without og:site_name the site name is the hostname itself.
+  assert.equal(
+    stripSiteName("Stripe | Financial Infrastructure", "stripe.com", "stripe.com"),
+    "Financial Infrastructure"
+  );
+});
+
+test("accepts the leading words of a longer site name", () => {
+  assert.equal(
+    stripSiteName(
+      "CSS grid layout - CSS | MDN",
+      "MDN Web Docs",
+      "developer.mozilla.org"
+    ),
+    "CSS grid layout - CSS"
+  );
+});
+
+test("leaves a title alone when neither end names the site", () => {
+  for (const [title, siteName, hostname] of [
+    ["대한민국 - 위키백과, 우리 모두의 백과사전", "ko.wikipedia.org", "ko.wikipedia.org"],
+    ["Next.js by Vercel - The React Framework", "nextjs.org", "nextjs.org"],
+    // A hyphen inside a word is not a separator.
+    ["Self-hosting Acme", "Acme", "acme.io"],
+    // "co" is a hostname label here, but far too short to mean the site.
+    ["Co - Working spaces", "example.co.kr", "example.co.kr"],
+  ]) {
+    assert.equal(stripSiteName(title, siteName, hostname), title);
+  }
+});
+
+test("never strips a title down to nothing", () => {
+  assert.equal(stripSiteName("YouTube", "YouTube", "youtube.com"), "YouTube");
+  assert.equal(stripSiteName("Acme | Acme", "Acme", "acme.io"), "Acme");
 });

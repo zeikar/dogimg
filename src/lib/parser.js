@@ -138,7 +138,7 @@ function getFaviconUrl(pageUrl, faviconUrl) {
 
 function getHostname(url) {
   const urlObject = new URL(url);
-  return urlObject.hostname;
+  return urlObject.hostname.replace(/^www\./, "");
 }
 
 // No default here: the card picks its own accent when a page declares none.

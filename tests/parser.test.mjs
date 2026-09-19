@@ -41,7 +41,8 @@ test("falls back to no-media theme-color and title tag when OG tags are missing"
 
   assert.equal(meta.title, "Document Title");
   assert.equal(meta.description, "");
-  assert.equal(meta.site_name, "www.sample.dev");
+  // The fallback site name is what the card prints, so no "www." noise.
+  assert.equal(meta.site_name, "sample.dev");
   assert.equal(meta.color, "#112233");
   assert.equal(meta.favicon, "https://www.sample.dev/assets/icon.svg");
 });

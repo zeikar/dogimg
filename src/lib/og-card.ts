@@ -40,6 +40,63 @@ export function shortenString(str: string, maxLength: number) {
   return `${sliced.trim()}...`;
 }
 
+// " | ", " - ", " · " and friends. The surrounding spaces are required, so a
+// hyphenated word is never mistaken for a separator.
+const TITLE_SEPARATOR = /\s+[|\-–—·•]\s+/g;
+
+function normalizeName(text: string) {
+  return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+function namesSite(segment: string, siteName: string, hostnameLabel: string) {
+  const key = normalizeName(segment);
+  if (!key) {
+    return false;
+  }
+  if (key === normalizeName(siteName)) {
+    return true;
+  }
+  // The looser matches below need some length to mean anything: "co" out of
+  // example.co.kr must not claim a title that starts with "Co".
+  if (key.length < 3) {
+    return false;
+  }
+
+  // "Stripe" for stripe.com — every label but the TLD.
+  const hostLabels = hostnameLabel.split(".").slice(0, -1);
+  if (hostLabels.some((label) => normalizeName(label) === key)) {
+    return true;
+  }
+
+  // "MDN" for a site that calls itself "MDN Web Docs".
+  return siteName.toLowerCase().startsWith(`${segment.trim().toLowerCase()} `);
+}
+
+// Pages routinely append or prepend their own name to the title. The card's
+// header already says whose page it is, so repeating it only shrinks the type.
+export function stripSiteName(
+  title: string,
+  siteName: string,
+  hostnameLabel: string
+) {
+  const separators = [...title.matchAll(TITLE_SEPARATOR)];
+  if (separators.length === 0) {
+    return title;
+  }
+
+  const last = separators[separators.length - 1];
+  if (namesSite(title.slice(last.index + last[0].length), siteName, hostnameLabel)) {
+    return title.slice(0, last.index).trim() || title;
+  }
+
+  const first = separators[0];
+  if (namesSite(title.slice(0, first.index), siteName, hostnameLabel)) {
+    return title.slice(first.index + first[0].length).trim() || title;
+  }
+
+  return title;
+}
+
 export function getHostnameLabel(url: string) {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
