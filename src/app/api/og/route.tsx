@@ -14,10 +14,6 @@ import {
 } from "@/lib/og-card";
 import { FONT_STACK, loadCardFonts } from "@/lib/og-fonts";
 
-export const config = {
-  runtime: "edge",
-};
-
 const DEFAULT_TARGET_URL = "https://github.com/zeikar/dogimg";
 
 // Long enough that crawlers hit the CDN, short enough that an edited page
@@ -200,7 +196,7 @@ async function renderFallbackCard(url: string) {
   );
 }
 
-export default async function handler(req: NextRequest) {
+export async function GET(req: NextRequest) {
   let url: string;
   try {
     url = getTargetUrl(req);

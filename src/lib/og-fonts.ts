@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 const FONT_FAMILY = "Noto Sans";
 const FALLBACK_FAMILY = "Noto Sans Fallback";
 export const FONT_STACK = `"${FONT_FAMILY}", "${FALLBACK_FAMILY}"`;
@@ -5,13 +8,13 @@ export const FONT_STACK = `"${FONT_FAMILY}", "${FALLBACK_FAMILY}"`;
 const FALLBACK_TIMEOUT_MS = 3000;
 
 // Passing `fonts` replaces @vercel/og's built-in Regular, so both weights ship
-// here. Without a 700 face Satori renders every fontWeight as Regular.
-const bundledFonts = Promise.all(
-  [
-    fetch(new URL("../assets/fonts/noto-sans-latin-400.woff", import.meta.url)),
-    fetch(new URL("../assets/fonts/noto-sans-latin-700.woff", import.meta.url)),
-  ].map(async (response) => (await response).arrayBuffer())
-);
+// here. Without a 700 face Satori renders every fontWeight as Regular. The
+// paths are spelled out from process.cwd() so that Next's file tracing sees
+// them and ships the fonts with the function.
+const bundledFonts = Promise.all([
+  readFile(join(process.cwd(), "src/assets/fonts/noto-sans-latin-400.woff")),
+  readFile(join(process.cwd(), "src/assets/fonts/noto-sans-latin-700.woff")),
+]);
 
 // @vercel/og fetches glyphs the bundled subsets lack on its own, but only at
 // weight 400 — a Korean headline would sit Regular next to a bold Latin one.
