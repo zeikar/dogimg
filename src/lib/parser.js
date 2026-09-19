@@ -1,4 +1,5 @@
 import { parse } from "node-html-parser";
+import { isRenderableIconHref } from "./icon-href.js";
 
 function parseMetaTagsFromRoot(root) {
   const metaTags = root.querySelectorAll("meta");
@@ -82,7 +83,7 @@ function parseFaviconFromRoot(root) {
   const candidates = root.querySelectorAll("link").filter((tag) => {
     const rel = (tag.getAttribute("rel") || "").toLowerCase();
     const href = tag.getAttribute("href") || "";
-    if (!href || /\.ico($|\?)/i.test(href)) {
+    if (!isRenderableIconHref(href)) {
       return false;
     }
     return rel.includes("icon");

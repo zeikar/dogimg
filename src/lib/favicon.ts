@@ -1,4 +1,5 @@
 import { fetchWithBrowserHeaders } from "@/lib/fetch";
+import { isRenderableIconHref } from "@/lib/icon-href";
 
 const FAVICON_TIMEOUT_MS = 5000;
 // Favicons are small by nature; anything larger is either broken or hostile.
@@ -25,11 +26,7 @@ function getGoogleFaviconUrl(pageUrl: string) {
 }
 
 function resolveFaviconUrl(favicon: string, pageUrl: string) {
-  // @vercel/og currently doesn't support .ico reliably, so use PNG fallback.
-  if (favicon && !/\.ico($|\?)/i.test(favicon)) {
-    return favicon;
-  }
-  return getGoogleFaviconUrl(pageUrl);
+  return isRenderableIconHref(favicon) ? favicon : getGoogleFaviconUrl(pageUrl);
 }
 
 function bytesToBase64(bytes: Uint8Array) {
@@ -191,6 +188,7 @@ export async function resolveRenderableFaviconUrl(
     return "";
   }
 
-  const resolvedFallback = await fetchImageAsDataUrl(fallback);
-  return resolvedFallback || fallback;
+  // Returning the bare URL would make satori fetch it mid-render, and an
+  // unreachable one leaves an empty box where the monogram should be.
+  return fetchImageAsDataUrl(fallback);
 }

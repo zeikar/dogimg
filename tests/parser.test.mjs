@@ -182,3 +182,18 @@ test("uses apple-touch-icon when no sized icons are present", () => {
   const meta = getSiteMetaDataFromHTML("https://example.com", html);
   assert.equal(meta.favicon, "https://example.com/apple-touch-icon.png");
 });
+
+test("skips .ico icons carrying a query string or fragment", () => {
+  const html = `
+    <html>
+      <head>
+        <link rel="icon" href="/favicon.ico?v=3" />
+        <link rel="icon" href="/favicon.ico#v4" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/icon-64.png" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.favicon, "https://example.com/icon-64.png");
+});
