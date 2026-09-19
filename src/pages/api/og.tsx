@@ -93,8 +93,6 @@ function OgCard({
         color: palette.ink,
         backgroundColor: "#ffffff",
         // Both glows hug the right edge, clear of where the left-aligned text starts.
-        // Positions are keywords because Satori reads a 0% offset as "unset"
-        // and centers the gradient instead.
         backgroundImage:
           `radial-gradient(circle at right top, ${palette.accentGlow} 0%, rgba(255, 255, 255, 0) 58%), ` +
           `radial-gradient(circle at right bottom, ${palette.accentAltGlow} 0%, rgba(255, 255, 255, 0) 42%)`,
