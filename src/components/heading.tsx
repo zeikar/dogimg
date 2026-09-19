@@ -8,8 +8,7 @@ export default function Heading() {
         DOGimg reads a page&apos;s title, description, icon and theme color, and
         draws a 1200×630 card from them. Point your{" "}
         <code className="font-mono text-[0.9em] text-ink">og:image</code> at one
-        URL and every page gets its own preview. Nothing to design, nothing to
-        deploy.
+        URL and every page gets its own preview.
       </p>
     </div>
   );
