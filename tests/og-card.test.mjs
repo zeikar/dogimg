@@ -42,3 +42,24 @@ test("cuts on a word boundary only when the boundary is late enough", () => {
   // lastSpace at 7 of 12 does not, so it cuts mid word rather than losing half.
   assert.equal(shortenString("one two three four five", 12), "one two thre...");
 });
+
+test("resolves CSS named colors, case and padding insensitively", () => {
+  assert.deepEqual(
+    getAccentGradientColors("red"),
+    getAccentGradientColors("#ff0000")
+  );
+  assert.deepEqual(
+    getAccentGradientColors("  ReBeccaPurple "),
+    getAccentGradientColors("#663399")
+  );
+  // Synonyms must not drift apart.
+  assert.deepEqual(getAccentGradientColors("grey"), getAccentGradientColors("gray"));
+  assert.deepEqual(getAccentGradientColors("aqua"), getAccentGradientColors("cyan"));
+});
+
+test("still rejects words that are not colors", () => {
+  const fallback = getAccentGradientColors("");
+  for (const value of ["not-a-color", "bluish", "transparent"]) {
+    assert.deepEqual(getAccentGradientColors(value), fallback);
+  }
+});

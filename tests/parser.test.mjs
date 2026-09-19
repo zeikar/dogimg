@@ -83,7 +83,7 @@ test("ignores unsupported ico favicons and returns default color for invalid the
     <html>
       <head>
         <title>ICO Only</title>
-        <meta name="theme-color" content="black" />
+        <meta name="theme-color" content="not-a-color" />
         <link rel="icon" href="/favicon.ico" />
       </head>
     </html>
@@ -239,4 +239,27 @@ test("keeps rgb() theme colors instead of dropping them to the default", () => {
 
   const meta = getSiteMetaDataFromHTML("https://example.com", html);
   assert.equal(meta.color, "rgb(255, 0, 0)");
+});
+
+test("keeps CSS named theme colors", () => {
+  // The declared value is kept as written, trimmed; case is normalized later,
+  // when the accent is derived. Same contract as the hex colors above.
+  const cases = [
+    ["black", "black"],
+    ["White", "White"],
+    ["rebeccapurple", "rebeccapurple"],
+    ["  Tomato  ", "Tomato"],
+  ];
+
+  for (const [declared, expected] of cases) {
+    const html = `
+      <html>
+        <head>
+          <meta name="theme-color" content="${declared}" />
+        </head>
+      </html>
+    `;
+    const meta = getSiteMetaDataFromHTML("https://example.com", html);
+    assert.equal(meta.color, expected, `theme-color: ${declared}`);
+  }
 });
