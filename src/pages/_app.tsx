@@ -48,14 +48,18 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="twitter:description" content={DESCRIPTION} />
         <meta name="twitter:image" content={SITE_OG_IMAGE} />
         <link rel="canonical" href={SITE_HOME} />
-        <link rel="apple-touch-icon" href="/dog.svg" />
+        {/* A PNG on a solid background: iOS ignores an SVG here, and paints
+            transparency black, which would hide a black dog. */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#67e8f9" />
         <meta name="msapplication-TileColor" content="#67e8f9" />
         <meta name="msapplication-TileImage" content="/dog.svg" />
         <meta name="application-name" content="DOGimg" />
         <meta name="apple-mobile-web-app-title" content="DOGimg" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/dog.svg" />
+        {/* The type keeps DOGimg's own card on the SVG: untyped, the parser
+            ranks the 180px touch icon above it. */}
+        <link rel="icon" type="image/svg+xml" href="/dog.svg" />
       </Head>
       <div className={notoSans.className}>
         <Component {...pageProps} />
