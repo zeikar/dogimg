@@ -5,11 +5,13 @@ import { getSiteMetaDataFromHTML } from "@/lib/parser";
 import { resolveRenderableFaviconUrl } from "@/lib/favicon";
 import { InvalidTargetUrlError, normalizeTargetUrl } from "@/lib/target-url";
 import {
-  getAccentGradientColors,
+  getCardPalette,
   getHostnameLabel,
   getMonogram,
+  getTitleFontSize,
   shortenString,
 } from "@/lib/og-card";
+import { FONT_STACK, loadCardFonts } from "@/lib/og-fonts";
 
 export const config = {
   runtime: "edge",
@@ -40,9 +42,26 @@ interface OgCardProps {
   title: string;
   description: string;
   favicon: string;
-  accentStrong: string;
-  accentSoft: string;
+  palette: ReturnType<typeof getCardPalette>;
 }
+
+// Korean may break between any two syllables by default, which splits words
+// mid-way ("백/과사전"). keep-all wraps at spaces, the way Korean is typeset.
+// Everything else keeps break-word so an unbroken token can't overflow.
+function getWordBreak(text: string) {
+  return /[\uac00-\ud7af]/.test(text) ? "keep-all" : "break-word";
+}
+
+const ICON_TILE_STYLE = {
+  display: "flex",
+  width: "72px",
+  height: "72px",
+  borderRadius: "16px",
+  marginRight: "20px",
+  overflow: "hidden",
+  background: "#ffffff",
+  border: "1px solid rgba(0, 0, 0, 0.08)",
+} as const;
 
 function OgCard({
   siteName,
@@ -50,8 +69,7 @@ function OgCard({
   title,
   description,
   favicon,
-  accentStrong,
-  accentSoft,
+  palette,
 }: OgCardProps) {
   // Most sites omit og:site_name, in which case site_name is already the
   // hostname — showing it twice just wastes the header.
@@ -64,89 +82,60 @@ function OgCard({
       style={{
         display: "flex",
         flexDirection: "column",
+        // The header pins to the top and the text to the bottom, so a page
+        // with a one-word title still fills the card instead of leaving the
+        // lower half empty.
+        justifyContent: "space-between",
         width: "100%",
         height: "100%",
-        padding: "52px 44px 58px",
+        padding: "64px 72px 72px",
+        fontFamily: FONT_STACK,
+        color: palette.ink,
         backgroundColor: "#ffffff",
-        backgroundImage: `linear-gradient(to top, ${accentStrong} 0%, ${accentSoft} 24%, #ffffff 56%)`,
+        // Both glows hug the right edge, clear of where the left-aligned text starts.
+        // Positions are keywords because Satori reads a 0% offset as "unset"
+        // and centers the gradient instead.
+        backgroundImage:
+          `radial-gradient(circle at right top, ${palette.accentGlow} 0%, rgba(255, 255, 255, 0) 58%), ` +
+          `radial-gradient(circle at right bottom, ${palette.accentAltGlow} 0%, rgba(255, 255, 255, 0) 42%)`,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: "28px",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center" }}>
         {favicon ? (
-          <div
-            style={{
-              display: "flex",
-              width: "92px",
-              height: "92px",
-              borderRadius: "20px",
-              marginRight: "18px",
-              overflow: "hidden",
-              background: "#ffffff",
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-            }}
-          >
+          <div style={ICON_TILE_STYLE}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              width="92"
-              height="92"
+              width="72"
+              height="72"
               alt=""
               src={favicon}
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
+              style={{ width: "100%", height: "100%" }}
             />
           </div>
         ) : (
           <div
             style={{
-              display: "flex",
-              width: "92px",
-              height: "92px",
-              borderRadius: "20px",
-              marginRight: "18px",
+              ...ICON_TILE_STYLE,
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "38px",
-              fontWeight: "700",
-              color: "rgba(17, 24, 39, 0.9)",
-              background: "rgba(255, 255, 255, 0.86)",
-              border: "1px solid rgba(0, 0, 0, 0.08)",
+              fontSize: "32px",
+              fontWeight: 700,
+              color: "#ffffff",
+              background: palette.accent,
+              border: "none",
             }}
           >
             {getMonogram(hostnameLabel)}
           </div>
         )}
         {siteName ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "50px",
-                color: "#1f2937",
-                fontWeight: "600",
-                lineHeight: "1",
-                marginBottom: showHostname ? "8px" : "0px",
-              }}
-            >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: "34px", fontWeight: 700, lineHeight: 1.15 }}>
               {siteName}
             </div>
             {showHostname ? (
               <div
-                style={{
-                  fontSize: "26px",
-                  color: "rgba(17, 24, 39, 0.62)",
-                }}
+                style={{ fontSize: "24px", lineHeight: 1.3, color: palette.muted }}
               >
                 {hostnameLabel}
               </div>
@@ -154,38 +143,44 @@ function OgCard({
           </div>
         ) : null}
       </div>
-      <div
-        style={{
-          fontSize: "66px",
-          fontWeight: "700",
-          color: "#111827",
-          lineHeight: "1.08",
-          wordBreak: "break-word",
-          marginBottom: description ? "34px" : "0px",
-        }}
-      >
-        {title}
-      </div>
-      {description ? (
+      <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            fontSize: "34px",
-            lineHeight: "1.28",
-            color: "rgba(17, 24, 39, 0.72)",
+            display: "block",
+            lineClamp: 3,
+            fontSize: `${getTitleFontSize(title)}px`,
+            fontWeight: 700,
+            lineHeight: 1.12,
+            letterSpacing: "-0.02em",
+            wordBreak: getWordBreak(title),
           }}
         >
-          {description}
+          {title}
         </div>
-      ) : null}
+        {description ? (
+          <div
+            style={{
+              display: "block",
+              lineClamp: 3,
+              marginTop: "24px",
+              fontSize: "30px",
+              lineHeight: 1.4,
+              color: palette.muted,
+              wordBreak: getWordBreak(description),
+            }}
+          >
+            {description}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 // A crawler that gets a 500 shows nothing at all, so a failed lookup still
 // renders a card — just a bare one built from the hostname.
-function renderFallbackCard(url: string) {
+async function renderFallbackCard(url: string) {
   const hostnameLabel = getHostnameLabel(url);
-  const { accentStrong, accentSoft } = getAccentGradientColors("");
 
   return new ImageResponse(
     (
@@ -195,11 +190,14 @@ function renderFallbackCard(url: string) {
         title={hostnameLabel}
         description=""
         favicon=""
-        accentStrong={accentStrong}
-        accentSoft={accentSoft}
+        palette={getCardPalette("", hostnameLabel)}
       />
     ),
-    { ...IMAGE_SIZE, headers: { "cache-control": FALLBACK_CACHE_CONTROL } }
+    {
+      ...IMAGE_SIZE,
+      fonts: await loadCardFonts(hostnameLabel),
+      headers: { "cache-control": FALLBACK_CACHE_CONTROL },
+    }
   );
 }
 
@@ -222,11 +220,14 @@ export default async function handler(req: NextRequest) {
   try {
     const html = await fetchHTML(url);
     const metaData = getSiteMetaDataFromHTML(url, html);
-    const { accentStrong, accentSoft } = getAccentGradientColors(metaData.color);
+    const palette = getCardPalette(metaData.color, hostnameLabel);
     const siteName = shortenString(metaData.site_name, 30) || "Website";
     const title = shortenString(metaData.title, 66) || siteName;
     const description = shortenString(metaData.description, 180);
-    const favicon = await resolveRenderableFaviconUrl(metaData.favicon, url);
+    const [favicon, fonts] = await Promise.all([
+      resolveRenderableFaviconUrl(metaData.favicon, url),
+      loadCardFonts(siteName + title + description),
+    ]);
 
     // Never log `favicon` itself: it is a base64 data URL, often megabytes.
     console.log(
@@ -243,17 +244,16 @@ export default async function handler(req: NextRequest) {
           title={title}
           description={description}
           favicon={favicon}
-          accentStrong={accentStrong}
-          accentSoft={accentSoft}
+          palette={palette}
         />
       ),
-      { ...IMAGE_SIZE, headers: { "cache-control": CARD_CACHE_CONTROL } }
+      { ...IMAGE_SIZE, fonts, headers: { "cache-control": CARD_CACHE_CONTROL } }
     );
   } catch (e) {
     console.error(`[og] falling back to a bare card for ${url}:`, e);
 
     try {
-      return renderFallbackCard(url);
+      return await renderFallbackCard(url);
     } catch (fallbackError) {
       console.error("[og] fallback card failed:", fallbackError);
       return new Response("Failed to generate the image", { status: 500 });

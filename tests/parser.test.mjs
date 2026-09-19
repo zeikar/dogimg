@@ -78,7 +78,7 @@ test("uses description priority: og > twitter > meta description", () => {
   assert.equal(metaWithOg.description, "OG Description");
 });
 
-test("ignores unsupported ico favicons and returns default color for invalid theme-color", () => {
+test("ignores unsupported ico favicons and drops an invalid theme-color", () => {
   const html = `
     <html>
       <head>
@@ -92,7 +92,7 @@ test("ignores unsupported ico favicons and returns default color for invalid the
   const meta = getSiteMetaDataFromHTML("https://dogimg.vercel.app", html);
 
   assert.equal(meta.favicon, "");
-  assert.equal(meta.color, "#bbbbbb");
+  assert.equal(meta.color, "");
 });
 
 test("returns safe defaults when metadata is completely missing", () => {
@@ -109,7 +109,7 @@ test("returns safe defaults when metadata is completely missing", () => {
   assert.equal(meta.title, "");
   assert.equal(meta.description, "");
   assert.equal(meta.site_name, "empty.example");
-  assert.equal(meta.color, "#bbbbbb");
+  assert.equal(meta.color, "");
   assert.equal(meta.favicon, "");
 });
 
@@ -119,7 +119,7 @@ test("returns safe defaults when html is an empty string", () => {
   assert.equal(meta.title, "");
   assert.equal(meta.description, "");
   assert.equal(meta.site_name, "empty-string.example");
-  assert.equal(meta.color, "#bbbbbb");
+  assert.equal(meta.color, "");
   assert.equal(meta.favicon, "");
 });
 

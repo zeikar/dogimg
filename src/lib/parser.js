@@ -141,10 +141,9 @@ function getHostname(url) {
   return urlObject.hostname;
 }
 
-const DEFAULT_COLOR = "#bbbbbb";
-
+// No default here: the card picks its own accent when a page declares none.
 function getValidColor(color) {
-  return isSupportedColor(color) ? color.trim() : DEFAULT_COLOR;
+  return isSupportedColor(color) ? color.trim() : "";
 }
 
 export const getSiteMetaDataFromHTML = (url, html) => {
