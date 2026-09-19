@@ -1,12 +1,23 @@
 import "@/styles/globals.css";
-import "@/styles/spinner.css";
 import type { AppProps } from "next/app";
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
+import localFont from "next/font/local";
 import { SITE_URL, getOgImageUrl } from "@/lib/og-url";
 
 const SITE_HOME = `${SITE_URL}/`;
 const SITE_OG_IMAGE = getOgImageUrl(SITE_HOME);
+
+// The same files the cards are rendered with, so the page and its output share
+// a typeface.
+const notoSans = localFont({
+  src: [
+    { path: "../assets/fonts/noto-sans-latin-400.woff", weight: "400" },
+    { path: "../assets/fonts/noto-sans-latin-700.woff", weight: "700" },
+  ],
+  display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+});
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -55,7 +66,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/dog.svg" />
       </Head>
-      <Component {...pageProps} />
+      <div className={notoSans.className}>
+        <Component {...pageProps} />
+      </div>
       <Analytics />
     </>
   );

@@ -1,1 +1,72 @@
 @import "tailwindcss";
+
+/* Registered as numbers so a change of hue can be transitioned. */
+@property --hue {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 190;
+}
+
+@property --hue-alt {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 220;
+}
+
+/* The same recipe the cards are drawn with (getCardPalette in og-card.ts), so
+   the page reads as one of its own cards. The preview overwrites --hue with
+   the accent of whatever card it is showing. */
+@theme {
+  --color-ink: hsl(var(--hue) 35% 10%);
+  /* A shade darker than the cards' muted text: here it is set small, and some
+     of it lies over the glow. */
+  --color-muted: hsl(var(--hue) 14% 33%);
+  --color-line: hsl(var(--hue) 24% 86%);
+  /* Decoration only. On white it is too light to carry text or a focus ring. */
+  --color-accent: hsl(var(--hue) 74% 46%);
+}
+
+:root {
+  color-scheme: light;
+  transition:
+    --hue 700ms ease,
+    --hue-alt 700ms ease;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-ink);
+}
+
+/* Fixed to the viewport rather than painted on the body, whose height would
+   stretch the glow over the whole document. Sized by the viewport's width so
+   that on a phone it stays a lit corner instead of washing the whole screen. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(
+      circle min(80vw, 110vh) at right top,
+      hsl(var(--hue) 74% 56% / 0.32) 0%,
+      hsl(var(--hue) 74% 56% / 0) 70%
+    ),
+    radial-gradient(
+      circle min(60vw, 90vh) at right bottom,
+      hsl(var(--hue-alt) 74% 56% / 0.2) 0%,
+      hsl(var(--hue-alt) 74% 56% / 0) 70%
+    );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+}

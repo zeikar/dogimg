@@ -1,41 +1,31 @@
 import Image from "next/image";
+import { SITE_URL } from "@/lib/og-url";
 
+// Laid out like the header of a card: icon tile, site name, hostname.
 export default function Navbar() {
   return (
-    <nav className="bg-gray-100">
-      <div className="mx-auto max-w-6xl px-3 sm:px-4">
-        <div className="flex justify-between">
-          <div className="flex space-x-4">
-            <div>
-              <div className="flex items-center py-3 px-1.5 text-gray-700 hover:text-gray-900">
-                <Image
-                  src="/dog.svg"
-                  alt="DOGimg Logo"
-                  className="rounded-full"
-                  width={32}
-                  height={32}
-                />
-                <span className="ml-1.5 text-base font-bold">DOGimg</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1">
-            <a
-              href="https://github.com/zeikar/dogimg"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Image
-                src="/github-mark.svg"
-                alt="Github"
-                width={30}
-                height={30}
-              />
-            </a>
-          </div>
-        </div>
+    <header className="flex items-center justify-between gap-4 py-5 sm:py-6">
+      <div className="flex items-center gap-3">
+        <span className="flex size-12 items-center justify-center rounded-xl border border-line bg-white">
+          <Image src="/dog.svg" alt="" width={30} height={30} />
+        </span>
+        <span className="leading-tight">
+          <span className="block text-lg font-bold tracking-tight">DOGimg</span>
+          <span className="block text-sm text-muted">{new URL(SITE_URL).host}</span>
+        </span>
       </div>
-    </nav>
+
+      <nav aria-label="Site" className="flex items-center gap-5 text-sm font-bold">
+        <a
+          className="flex items-center gap-2 underline-offset-4 hover:underline"
+          href="https://github.com/zeikar/dogimg"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Image src="/github-mark.svg" alt="" width={20} height={20} />
+          GitHub
+        </a>
+      </nav>
+    </header>
   );
 }
