@@ -5,10 +5,13 @@ function parseMetaTagsFromRoot(root) {
   const metaTags = root.querySelectorAll("meta");
   const metaTagsObject = {};
   metaTags.forEach((tag) => {
-    const name =
-      (tag.getAttribute("property") || tag.getAttribute("name") || "").trim();
+    const name = (tag.getAttribute("property") || tag.getAttribute("name") || "")
+      .trim()
+      .toLowerCase();
     const content = tag.getAttribute("content");
-    if (name && content) {
+    // Duplicate tags are a common copy-paste artifact, and the first one is
+    // what a browser reports, so later repeats must not overwrite it.
+    if (name && content && !(name in metaTagsObject)) {
       metaTagsObject[name] = content;
     }
   });
@@ -137,11 +140,16 @@ function getHostname(url) {
   return urlObject.hostname;
 }
 
-function getValidColor(color = "#bbbbbb") {
+const DEFAULT_COLOR = "#bbbbbb";
+const SUPPORTED_COLOR_PATTERN = /^(#([0-9a-f]{3}|[0-9a-f]{6})|rgba?\([^)]+\))$/i;
+
+function getValidColor(color) {
   if (!color || typeof color !== "string") {
-    return "#bbbbbb";
+    return DEFAULT_COLOR;
   }
-  return color.startsWith("#") ? color : "#bbbbbb";
+
+  const normalized = color.trim();
+  return SUPPORTED_COLOR_PATTERN.test(normalized) ? normalized : DEFAULT_COLOR;
 }
 
 export const getSiteMetaDataFromHTML = (url, html) => {

@@ -197,3 +197,46 @@ test("skips .ico icons carrying a query string or fragment", () => {
   const meta = getSiteMetaDataFromHTML("https://example.com", html);
   assert.equal(meta.favicon, "https://example.com/icon-64.png");
 });
+
+test("matches meta tag names case-insensitively", () => {
+  const html = `
+    <html>
+      <head>
+        <title>Ignored</title>
+        <meta property="OG:TITLE" content="Upper Case OG Title" />
+        <meta name="Description" content="Capitalized Description" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.title, "Upper Case OG Title");
+  assert.equal(meta.description, "Capitalized Description");
+});
+
+test("keeps the first of duplicated meta tags", () => {
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="First" />
+        <meta property="og:title" content="Second" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.title, "First");
+});
+
+test("keeps rgb() theme colors instead of dropping them to the default", () => {
+  const html = `
+    <html>
+      <head>
+        <meta name="theme-color" content="rgb(255, 0, 0)" />
+      </head>
+    </html>
+  `;
+
+  const meta = getSiteMetaDataFromHTML("https://example.com", html);
+  assert.equal(meta.color, "rgb(255, 0, 0)");
+});
