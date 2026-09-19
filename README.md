@@ -84,6 +84,21 @@ Then open:
 - `http://localhost:3000`
 - `http://localhost:3000/api/og?url=https://github.com`
 
+### Environment
+
+- `NEXT_PUBLIC_SITE_URL` (optional): origin used in the copied meta tag and in
+  the site's own metadata. Defaults to `https://dogimg.vercel.app`. Set it to
+  `http://localhost:3000` locally so the snippets you copy point at your own
+  instance.
+
+### Checks
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
 ## How It Works
 
 1. Fetch HTML from the target URL.
