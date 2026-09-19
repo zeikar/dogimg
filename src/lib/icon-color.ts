@@ -1,4 +1,4 @@
-import { Unzlib } from "fflate";
+import { inflateSync } from "node:zlib";
 import { getChroma, isChromatic, parseColor, rgbToHsl } from "./color.js";
 
 type Rgb = { r: number; g: number; b: number };
@@ -13,9 +13,6 @@ const HUE_BINS = 12;
 // Below this share of an icon's pixels, the color is an accent on a
 // black-and-white icon, not its identity.
 const MIN_CHROMATIC_SHARE = 0.05;
-// Input is fed to the inflater in slices so it can be abandoned part-way: at
-// deflate's ~1000:1 ceiling, one slice can expand to about 4MB at most.
-const INFLATE_SLICE_BYTES = 4096;
 const NEEDED_CHUNKS = new Set(["IHDR", "PLTE", "tRNS", "IDAT"]);
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -106,30 +103,12 @@ function concat(parts: Uint8Array[]) {
   return merged;
 }
 
-// Pure JS because the Edge Runtime has no DecompressionStream. The header has
-// already said how many bytes to expect, so the stream is dropped the moment it
-// produces more: a 2MB bomb that would inflate to 2GB costs milliseconds.
-// (fflate's one-shot `out` option bounds the memory but still inflates it all.)
+// The header has already said how many bytes to expect, and zlib is told to
+// stop there: it throws as soon as the output would outgrow the limit, so a
+// 2MB bomb that would inflate to 2GB costs milliseconds, not seconds.
 function inflate(data: Uint8Array, expectedLength: number) {
-  const output = new Uint8Array(expectedLength);
-  let length = 0;
-  let overflowed = false;
-
-  const stream = new Unzlib((chunk) => {
-    if (length + chunk.length > expectedLength) {
-      overflowed = true;
-      return;
-    }
-    output.set(chunk, length);
-    length += chunk.length;
-  });
-
-  for (let offset = 0; offset < data.length && !overflowed; offset += INFLATE_SLICE_BYTES) {
-    const end = offset + INFLATE_SLICE_BYTES;
-    stream.push(data.subarray(offset, end), end >= data.length);
-  }
-
-  return !overflowed && length === expectedLength ? output : null;
+  const output = inflateSync(data, { maxOutputLength: expectedLength });
+  return output.length === expectedLength ? output : null;
 }
 
 // Reverses the per-row prediction filters in place (PNG spec, section 9).
@@ -300,7 +279,8 @@ export function getDominantIconColor(bytes: Uint8Array, mimeType: string) {
     }
     return null;
   } catch (e) {
-    // fflate throws on a corrupt deflate stream. The card only loses a nicety.
+    // zlib throws on a corrupt stream and on one that outgrows its limit. The
+    // card only loses a nicety.
     console.warn("[og] could not read the favicon's colors:", e);
     return null;
   }

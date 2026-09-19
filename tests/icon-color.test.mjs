@@ -294,9 +294,9 @@ test("abandons a decompression bomb as soon as it outgrows the header", () => {
 
   for (const size of [1, 1024]) {
     const png = craftPng({ width: size, height: size, idat });
-    // Left to run, this stream takes 3.4s to inflate, whatever becomes of the
-    // output; only stopping early keeps it under the bar.
-    assert.ok(elapsed(() => assert.equal(getDominantIconColor(png, "image/png"), null)) < 1000);
+    // Bounded, this is about a millisecond. Left to run it is a second of CPU
+    // and 3.6GB of memory, so the bar sits far from both.
+    assert.ok(elapsed(() => assert.equal(getDominantIconColor(png, "image/png"), null)) < 100);
   }
 });
 
