@@ -51,17 +51,10 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
         <label htmlFor="page-url" className="sr-only">
           Page URL
         </label>
-        {/* The field is the API call itself: what you type is the url parameter. */}
-        <div className="flex flex-wrap items-stretch rounded-2xl border border-line bg-white shadow-[0_12px_32px_-16px_hsl(var(--hue)_40%_30%/0.35)] focus-within:border-ink focus-within:ring-2 focus-within:ring-accent/30 sm:flex-nowrap">
-          <span
-            aria-hidden="true"
-            className="flex items-center pl-4 font-mono text-base text-ink/75 sm:pl-5 sm:text-lg"
-          >
-            /api/og?url=
-          </span>
+        <div className="flex items-stretch rounded-2xl border border-line bg-white shadow-[0_12px_32px_-16px_hsl(var(--hue)_40%_30%/0.35)] focus-within:border-ink focus-within:ring-2 focus-within:ring-accent/30">
           <input
             id="page-url"
-            className="min-w-0 flex-1 bg-transparent py-4 pr-2 pl-1 font-mono text-base text-ink placeholder:text-muted focus:outline-hidden sm:text-lg"
+            className="min-w-0 flex-1 bg-transparent py-4 pr-2 pl-4 font-mono text-base text-ink placeholder:text-muted focus:outline-hidden sm:pl-5 sm:text-lg"
             type="url"
             inputMode="url"
             placeholder="your-site.com/post"
@@ -80,7 +73,7 @@ const InputForm = ({ handleSubmit }: InputFormProps) => {
             required
           />
           <button
-            className="m-1.5 basis-full rounded-xl bg-ink px-6 py-3 font-bold text-white hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:shrink-0 sm:basis-auto sm:py-0"
+            className="m-1.5 shrink-0 rounded-xl bg-ink px-4 text-sm font-bold text-white hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:px-6 sm:text-base"
             type="submit"
           >
             Generate card
