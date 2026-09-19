@@ -1,4 +1,11 @@
-export const SITE_URL = "https://dogimg.vercel.app";
+const FALLBACK_SITE_URL = "https://dogimg.vercel.app";
+
+// Set NEXT_PUBLIC_SITE_URL so local and preview builds stop handing out
+// production links. Inlined at build time, so it must carry the NEXT_PUBLIC
+// prefix to survive into the browser bundle.
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE_URL
+).replace(/\/+$/, "");
 
 // Query params in the target URL must be encoded, otherwise they leak into
 // DOGimg's own query string and the target URL gets truncated.

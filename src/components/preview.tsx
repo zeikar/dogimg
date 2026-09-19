@@ -18,10 +18,6 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ src }) => {
       setLoading(false);
       return;
     }
-    if (src === displaySrc) {
-      setLoading(false);
-      return;
-    }
 
     setLoading(true);
     let cancelled = false;
@@ -45,7 +41,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ src }) => {
     return () => {
       cancelled = true;
     };
-  }, [src, displaySrc]);
+  }, [src]);
 
   const renderMessage = (message: string, textClassName: string) => {
     return (

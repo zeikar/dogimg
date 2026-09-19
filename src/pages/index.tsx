@@ -114,7 +114,6 @@ export default function Home() {
           </article>
         </section>
       </main>
-      <footer className=""></footer>
     </>
   );
 }
