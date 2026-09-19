@@ -5,10 +5,9 @@ export default function Heading() {
         Turn any URL into an Open Graph image
       </h1>
       <p className="mt-4 max-w-[64ch] text-lg leading-normal text-muted sm:text-xl sm:leading-normal text-pretty">
-        DOGimg reads a page&apos;s title, description, icon and theme color, and
-        draws a 1200×630 card from them. Point your{" "}
-        <code className="font-mono text-[0.9em] text-ink">og:image</code> at one
-        URL and every page gets its own preview.
+        Add one <code className="font-mono text-[0.9em] text-ink">og:image</code>{" "}
+        tag, and every page you share gets its own preview card: its title, its
+        icon, its color. Nothing to design, nothing to deploy.
       </p>
     </div>
   );

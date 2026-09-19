@@ -61,7 +61,7 @@ export default function Home() {
         <Faq />
       </main>
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-8 text-sm text-muted">
-        <p>DOGimg is open source under the MIT license.</p>
+        <p>DOGimg is short for Dynamic Open Graph image. Open source under the MIT license.</p>
         <a
           className="font-bold text-ink underline-offset-4 hover:underline"
           href="https://github.com/zeikar/dogimg"

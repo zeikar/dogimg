@@ -12,7 +12,7 @@ const PAGE_TITLE = "DOGimg: Open Graph Image Generator for Any URL";
 // separately from the title.
 const SHARE_TITLE = "Turn any URL into an Open Graph image";
 const DESCRIPTION =
-  "Paste a link, get a 1200×630 Open Graph image drawn from the page's title, description, favicon and theme color. A free API: one URL, no design work.";
+  "Add one og:image tag and every page you share gets its own 1200×630 preview card. Free dynamic Open Graph image API: nothing to design, nothing to deploy.";
 
 // The same files the cards are rendered with, so the page and its output share
 // a typeface.
