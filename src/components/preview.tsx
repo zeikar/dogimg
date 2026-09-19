@@ -52,9 +52,16 @@ function followAccent(image: HTMLImageElement) {
 const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, onShown }) => {
   const src = getOgImagePath(url);
   // Starts out showing the first card, so it is part of the server-rendered
-  // page instead of arriving after hydration. That one is never fetched from
-  // here, so whether it is a fallback is not known; it is taken not to be.
-  const [displayed, setDisplayed] = React.useState({ src, url, fallback: false, attempt });
+  // page instead of arriving after hydration. That one didn't come through the
+  // fetch below, so it goes through it once, unannounced: the image is in the
+  // browser's cache by then, and only its header is news.
+  const [displayed, setDisplayed] = React.useState({
+    src,
+    url,
+    fallback: false,
+    attempt,
+    checked: false,
+  });
   const [failure, setFailure] = React.useState({ attempt: -1, reason: "" });
   const failed = failure.attempt === attempt;
   // A fallback is worth asking for again: the page behind it may be back.
@@ -64,7 +71,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, on
 
   // The card on screen stays until the next one has loaded.
   React.useEffect(() => {
-    if (upToDate) {
+    if (upToDate && displayed.checked) {
       if (attempt > 0) {
         onShown(displayed.fallback ? "" : url);
       }
@@ -96,7 +103,13 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, on
           setFailure({ attempt, reason: "" });
           return;
         }
-        setDisplayed({ src, url, fallback: response.headers.has(FALLBACK_HEADER), attempt });
+        setDisplayed({
+          src,
+          url,
+          fallback: response.headers.has(FALLBACK_HEADER),
+          attempt,
+          checked: true,
+        });
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
@@ -106,7 +119,7 @@ const PreviewImage: React.FC<PreviewImageProps> = ({ url, attempt, isExample, on
       });
 
     return () => controller.abort();
-  }, [src, url, attempt, upToDate, displayed.fallback, onShown]);
+  }, [src, url, attempt, upToDate, displayed.fallback, displayed.checked, onShown]);
 
   // On a phone the card sits below the fold, so a new request brings it up.
   const figure = React.useRef<HTMLElement>(null);
