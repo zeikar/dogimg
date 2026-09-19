@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { isRenderableIconHref } from "./icon-href.js";
+import { isSupportedColor } from "./color.js";
 
 function parseMetaTagsFromRoot(root) {
   const metaTags = root.querySelectorAll("meta");
@@ -141,15 +142,9 @@ function getHostname(url) {
 }
 
 const DEFAULT_COLOR = "#bbbbbb";
-const SUPPORTED_COLOR_PATTERN = /^(#([0-9a-f]{3}|[0-9a-f]{6})|rgba?\([^)]+\))$/i;
 
 function getValidColor(color) {
-  if (!color || typeof color !== "string") {
-    return DEFAULT_COLOR;
-  }
-
-  const normalized = color.trim();
-  return SUPPORTED_COLOR_PATTERN.test(normalized) ? normalized : DEFAULT_COLOR;
+  return isSupportedColor(color) ? color.trim() : DEFAULT_COLOR;
 }
 
 export const getSiteMetaDataFromHTML = (url, html) => {

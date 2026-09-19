@@ -1,3 +1,5 @@
+import { parseColor } from "./color.js";
+
 type Rgb = { r: number; g: number; b: number };
 
 const FALLBACK_ACCENT_HEX = "#7dd3fc";
@@ -42,73 +44,6 @@ export function getAccentGradientColors(color: string) {
   };
 }
 
-function normalizeHexColor(color: string) {
-  if (!color || typeof color !== "string" || !color.startsWith("#")) {
-    return null;
-  }
-
-  const clean = color.slice(1).trim();
-  if (/^[0-9a-fA-F]{3}$/.test(clean)) {
-    return clean
-      .split("")
-      .map((char) => char + char)
-      .join("");
-  }
-
-  if (/^[0-9a-fA-F]{6}$/.test(clean)) {
-    return clean;
-  }
-
-  return null;
-}
-
-function hexToRgb(color: string) {
-  const normalized = normalizeHexColor(color);
-  if (!normalized) {
-    return null;
-  }
-
-  const intColor = Number.parseInt(normalized, 16);
-  return {
-    r: (intColor >> 16) & 255,
-    g: (intColor >> 8) & 255,
-    b: intColor & 255,
-  };
-}
-
-function parseRgbColor(color: string) {
-  const match = color.trim().match(/^rgba?\(([^)]+)\)$/i);
-  if (!match) {
-    return null;
-  }
-
-  const parts = match[1].split(/[\s,/]+/).filter(Boolean);
-  if (parts.length < 3) {
-    return null;
-  }
-
-  const channels = parts.slice(0, 3).map((part) => {
-    const value = Number.parseFloat(part);
-    if (!Number.isFinite(value)) {
-      return NaN;
-    }
-    return part.endsWith("%") ? Math.round((value / 100) * 255) : Math.round(value);
-  });
-
-  if (channels.some((channel) => !Number.isFinite(channel) || channel < 0 || channel > 255)) {
-    return null;
-  }
-
-  return { r: channels[0], g: channels[1], b: channels[2] };
-}
-
-function parseColor(color: string) {
-  if (!color || typeof color !== "string") {
-    return null;
-  }
-  return hexToRgb(color) || parseRgbColor(color);
-}
-
 function blendRgb(base: Rgb, mixWith: Rgb, mixRatio: number) {
   const ratio = Math.max(0, Math.min(1, mixRatio));
   const baseRatio = 1 - ratio;
@@ -131,7 +66,7 @@ function rgbToCss(rgb: Rgb, alpha = 1) {
 }
 
 function getBalancedAccentColor(color: string) {
-  const fallback = hexToRgb(FALLBACK_ACCENT_HEX) || { r: 125, g: 211, b: 252 };
+  const fallback = parseColor(FALLBACK_ACCENT_HEX) || { r: 125, g: 211, b: 252 };
   let rgb = parseColor(color) || fallback;
   const luminance = getLuminance(rgb);
 
