@@ -130,3 +130,38 @@ export function parseColor(color) {
 export function isSupportedColor(color) {
   return parseColor(color) !== null;
 }
+
+// RGB spread below which a color reads as gray, black or white. HSL saturation
+// can't make this call: #fffbeb is "100% saturated" and still looks white.
+const MIN_CHROMA = 0.15;
+
+export function getChroma({ r, g, b }) {
+  return (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+}
+
+export function isChromatic(rgb) {
+  return getChroma(rgb) >= MIN_CHROMA;
+}
+
+export function rgbToHsl({ r, g, b }) {
+  const [rn, gn, bn] = [r / 255, g / 255, b / 255];
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+  const l = (max + min) / 2;
+  if (delta === 0) {
+    return { h: 0, s: 0, l };
+  }
+
+  const s = delta / (1 - Math.abs(2 * l - 1));
+  let h;
+  if (max === rn) {
+    h = ((gn - bn) / delta) % 6;
+  } else if (max === gn) {
+    h = (bn - rn) / delta + 2;
+  } else {
+    h = (rn - gn) / delta + 4;
+  }
+
+  return { h: (h * 60 + 360) % 360, s, l };
+}

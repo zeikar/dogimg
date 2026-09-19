@@ -1,9 +1,13 @@
 import { fetchWithBrowserHeaders } from "@/lib/fetch";
 import { isRenderableIconHref } from "@/lib/icon-href";
+import { getDominantIconColor } from "@/lib/icon-color";
+
+const NO_FAVICON = { src: "", color: null };
 
 const FAVICON_TIMEOUT_MS = 5000;
 // Favicons are small by nature; anything larger is either broken or hostile.
-// The whole payload is held in memory twice (raw bytes + base64 data URL).
+// The whole payload is held in memory as raw bytes and again as a base64 data
+// URL, and reading its colors briefly adds the decoded pixels (capped there).
 const MAX_FAVICON_BYTES = 2 * 1024 * 1024;
 
 const SUPPORTED_FAVICON_MIME_TYPES = new Set([
@@ -125,9 +129,9 @@ function detectFaviconMimeType(bytes: Uint8Array, contentType: string) {
   return "";
 }
 
-async function fetchImageAsDataUrl(imageUrl: string) {
+async function fetchFavicon(imageUrl: string) {
   if (!imageUrl) {
-    return "";
+    return NO_FAVICON;
   }
 
   const controller = new AbortController();
@@ -142,53 +146,55 @@ async function fetchImageAsDataUrl(imageUrl: string) {
     });
 
     if (!response.ok) {
-      return "";
+      return NO_FAVICON;
     }
 
     const contentType = (response.headers.get("content-type") || "").toLowerCase();
     if (contentType.includes("text/html")) {
-      return "";
+      return NO_FAVICON;
     }
 
     const declaredLength = Number(response.headers.get("content-length"));
     if (declaredLength > MAX_FAVICON_BYTES) {
-      return "";
+      return NO_FAVICON;
     }
 
     const bytes = await readBodyWithLimit(response, MAX_FAVICON_BYTES);
     if (!bytes) {
-      return "";
+      return NO_FAVICON;
     }
 
     const mimeType = detectFaviconMimeType(bytes, contentType);
     if (!mimeType) {
-      return "";
+      return NO_FAVICON;
     }
 
-    return `data:${mimeType};base64,${bytesToBase64(bytes)}`;
+    return {
+      src: `data:${mimeType};base64,${bytesToBase64(bytes)}`,
+      color: getDominantIconColor(bytes, mimeType),
+    };
   } catch {
-    return "";
+    return NO_FAVICON;
   } finally {
     clearTimeout(timeout);
   }
 }
 
-export async function resolveRenderableFaviconUrl(
-  favicon: string,
-  pageUrl: string
-) {
+// `src` is a data URL ready to embed, `color` the icon's dominant color for
+// the card to match; either may be missing.
+export async function resolveRenderableFavicon(favicon: string, pageUrl: string) {
   const candidate = resolveFaviconUrl(favicon, pageUrl);
-  const resolvedCandidate = await fetchImageAsDataUrl(candidate);
-  if (resolvedCandidate) {
+  const resolvedCandidate = await fetchFavicon(candidate);
+  if (resolvedCandidate.src) {
     return resolvedCandidate;
   }
 
   const fallback = getGoogleFaviconUrl(pageUrl);
   if (!fallback || fallback === candidate) {
-    return "";
+    return NO_FAVICON;
   }
 
   // Returning the bare URL would make satori fetch it mid-render, and an
   // unreachable one leaves an empty box where the monogram should be.
-  return fetchImageAsDataUrl(fallback);
+  return fetchFavicon(fallback);
 }

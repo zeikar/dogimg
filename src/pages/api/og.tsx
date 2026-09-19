@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { fetchHTML } from "@/lib/fetch";
 import { getSiteMetaDataFromHTML } from "@/lib/parser";
-import { resolveRenderableFaviconUrl } from "@/lib/favicon";
+import { resolveRenderableFavicon } from "@/lib/favicon";
 import { InvalidTargetUrlError, normalizeTargetUrl } from "@/lib/target-url";
 import {
   getCardPalette,
@@ -219,7 +219,6 @@ export default async function handler(req: NextRequest) {
   try {
     const html = await fetchHTML(url);
     const metaData = getSiteMetaDataFromHTML(url, html);
-    const palette = getCardPalette(metaData.color, hostnameLabel);
     const siteName = shortenString(metaData.site_name, 30) || "Website";
     const title =
       shortenString(
@@ -228,15 +227,17 @@ export default async function handler(req: NextRequest) {
       ) || siteName;
     const description = shortenString(metaData.description, 180);
     const [favicon, fonts] = await Promise.all([
-      resolveRenderableFaviconUrl(metaData.favicon, url),
+      resolveRenderableFavicon(metaData.favicon, url),
       loadCardFonts(siteName + title + description),
     ]);
+    const palette = getCardPalette(metaData.color, hostnameLabel, favicon.color);
 
-    // Never log `favicon` itself: it is a base64 data URL, often megabytes.
+    // Never log `favicon.src` itself: it is a base64 data URL, often megabytes.
     console.log(
       `[og] url=${url} site="${siteName}" title="${title}" desc=${description.length} ` +
         `color=${metaData.color} faviconSrc=${metaData.favicon || "none"} ` +
-        `faviconResolved=${favicon ? "yes" : "no"}`
+        `faviconResolved=${favicon.src ? "yes" : "no"} ` +
+        `iconColor=${favicon.color ? Object.values(favicon.color).join(",") : "none"}`
     );
 
     return new ImageResponse(
@@ -246,7 +247,7 @@ export default async function handler(req: NextRequest) {
           hostnameLabel={hostnameLabel}
           title={title}
           description={description}
-          favicon={favicon}
+          favicon={favicon.src}
           palette={palette}
         />
       ),

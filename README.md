@@ -103,7 +103,11 @@ npm run build
 
 1. Fetch HTML from the target URL.
 2. Parse metadata (`og:*`, `twitter:*`, `title`, `theme-color`, favicon).
-3. Render a 1200x630 image with `next/og` (the `@vercel/og` build that ships inside Next.js).
+3. Pick the card's accent color: the page's `theme-color` when it is an actual
+   color, otherwise the favicon's dominant color, otherwise a hue derived from
+   the hostname (so a site always gets the same one). To choose it yourself,
+   declare a non-gray `theme-color`.
+4. Render a 1200x630 image with `next/og` (the `@vercel/og` build that ships inside Next.js).
 
 ## License
 

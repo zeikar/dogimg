@@ -1,15 +1,11 @@
-import { parseColor } from "./color.js";
+import { isChromatic, parseColor, rgbToHsl } from "./color.js";
 
-type Rgb = { r: number; g: number; b: number };
+export type Rgb = { r: number; g: number; b: number };
 type Hsl = { h: number; s: number; l: number };
 
 // Hand-picked so each one still looks deliberate at the fixed saturation and
 // lightness below; a bare `hash % 360` lands on muddy olives and browns.
 const FALLBACK_HUES = [4, 24, 40, 150, 172, 192, 210, 228, 250, 268, 292, 332];
-
-// RGB spread below which a color reads as gray, black or white. HSL saturation
-// can't make this call: #fffbeb is "100% saturated" and still looks white.
-const MIN_CHROMA = 0.15;
 
 // Title tiers: the widest size whose worst case still fits the line budget.
 const TITLE_SIZES = [
@@ -137,14 +133,21 @@ export function getTitleFontSize(title: string) {
 }
 
 // Every color on the card comes from one hue. A site's theme-color supplies it
-// when it has one worth using; most declare white, black or nothing, and those
-// get a hue picked from the hostname so the same site always looks the same.
-export function getCardPalette(themeColor: string, seed: string) {
-  const declared = parseColor(themeColor);
-  const base =
-    declared && getChroma(declared) >= MIN_CHROMA
-      ? clampToAccentRange(rgbToHsl(declared))
-      : { h: pickFallbackHue(seed), s: 0.74, l: 0.56 };
+// when it has one worth using, but most declare white, black or nothing. Then
+// the favicon's own color is next — it sits on the card, so the glow has to
+// agree with it — and a hue picked from the hostname is the last resort, so
+// the same site always looks the same.
+export function getCardPalette(
+  themeColor: string,
+  seed: string,
+  iconColor: Rgb | null = null
+) {
+  const source = [parseColor(themeColor), iconColor].find(
+    (color) => color && isChromatic(color)
+  );
+  const base = source
+    ? clampToAccentRange(rgbToHsl(source))
+    : { h: pickFallbackHue(seed), s: 0.74, l: 0.56 };
   // The second glow is a neighboring hue. Warm hues turn toward red because
   // the other way lands in yellow-green, the one band that looks sickly next
   // to everything.
@@ -157,10 +160,6 @@ export function getCardPalette(themeColor: string, seed: string) {
     ink: hslToCss({ h: base.h, s: 0.35, l: 0.1 }),
     muted: hslToCss({ h: base.h, s: 0.12, l: 0.38 }),
   };
-}
-
-function getChroma({ r, g, b }: Rgb) {
-  return (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
 }
 
 // A navy or a pastel keeps its hue but is pulled to where it works as an
@@ -180,29 +179,6 @@ function pickFallbackHue(seed: string) {
     hash = Math.imul(hash ^ seed.charCodeAt(i), 0x01000193);
   }
   return FALLBACK_HUES[(hash >>> 0) % FALLBACK_HUES.length];
-}
-
-function rgbToHsl({ r, g, b }: Rgb): Hsl {
-  const [rn, gn, bn] = [r / 255, g / 255, b / 255];
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  const delta = max - min;
-  const l = (max + min) / 2;
-  if (delta === 0) {
-    return { h: 0, s: 0, l };
-  }
-
-  const s = delta / (1 - Math.abs(2 * l - 1));
-  let h: number;
-  if (max === rn) {
-    h = ((gn - bn) / delta) % 6;
-  } else if (max === gn) {
-    h = (bn - rn) / delta + 2;
-  } else {
-    h = (rn - gn) / delta + 4;
-  }
-
-  return { h: (h * 60 + 360) % 360, s, l };
 }
 
 // Emitted as rgb()/rgba() rather than hsl(): the strings end up in SVG
