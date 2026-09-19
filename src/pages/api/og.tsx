@@ -1,4 +1,4 @@
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { fetchHTML } from "@/lib/fetch";
 import { getSiteMetaDataFromHTML } from "@/lib/parser";

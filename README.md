@@ -103,7 +103,7 @@ npm run build
 
 1. Fetch HTML from the target URL.
 2. Parse metadata (`og:*`, `twitter:*`, `title`, `theme-color`, favicon).
-3. Render a 1200x630 image with `@vercel/og`.
+3. Render a 1200x630 image with `next/og` (the `@vercel/og` build that ships inside Next.js).
 
 ## License
 
