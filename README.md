@@ -101,6 +101,18 @@ public. Unlike the `curl` above, it saves nothing when the API answers with an
 error, and it exits with 1 and a warning when the page couldn't be read and the
 file is the plain fallback card. Requires Node.js 22 or later.
 
+## Deploy Your Own
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fzeikar%2Fdogimg)
+
+`dogimg.vercel.app` is a shared instance with no uptime guarantee. If your link
+previews shouldn't depend on it, deploy your own copy and point your `og:image`
+tags at it. Once it has a URL, set `NEXT_PUBLIC_SITE_URL` to it and redeploy,
+so the snippets its home page hands out name your instance.
+
+Anywhere else that runs Next.js works too: `npm run build && npm start` on
+Node.js 22.19 or later.
+
 ## Run Locally
 
 ```bash
