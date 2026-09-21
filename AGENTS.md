@@ -18,6 +18,8 @@ Pages Router).
   (`fetch.js`), metadata (`parser.js`), card palette and title (`og-card.ts`),
   favicon and its color (`favicon.ts`, `icon-color.ts`), fonts (`og-fonts.ts`).
 - `src/assets/fonts/`: Noto Sans, used by the cards and by the page.
+- `cli/`: the `dogimg` npm package (`npx dogimg <url>`), a thin client of the
+  hosted API with its own `package.json`. Tested by `tests/cli.test.mjs`.
 
 ## Checks
 

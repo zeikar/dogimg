@@ -1,0 +1,30 @@
+{
+  "name": "dogimg",
+  "version": "0.1.0",
+  "description": "Save the Open Graph card DOGimg draws for any URL as a PNG.",
+  "keywords": [
+    "open-graph",
+    "og-image",
+    "social-card",
+    "cli"
+  ],
+  "homepage": "https://dogimg.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeikar/dogimg.git",
+    "directory": "cli"
+  },
+  "license": "MIT",
+  "author": "Zeikar",
+  "type": "module",
+  "bin": {
+    "dogimg": "bin/dogimg.js"
+  },
+  "files": [
+    "bin",
+    "run.js"
+  ],
+  "engines": {
+    "node": ">=22"
+  }
+}

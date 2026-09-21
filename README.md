@@ -86,6 +86,20 @@ export async function generateMetadata() {
 curl "https://dogimg.vercel.app/api/og?url=https://github.com" --output og.png
 ```
 
+## CLI
+
+To keep a card as a file rather than link to it:
+
+```bash
+npx dogimg https://github.com              # saves og.png
+npx dogimg https://github.com -o card.png
+```
+
+It asks `https://dogimg.vercel.app` for the card, so the page still has to be
+public. Unlike the `curl` above, it saves nothing when the API answers with an
+error, and it exits with 1 and a warning when the page couldn't be read and the
+file is the plain fallback card. Requires Node.js 22 or later.
+
 ## Run Locally
 
 ```bash
