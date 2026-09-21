@@ -34,7 +34,9 @@ npm run build
 
 - **Every URL that came from a visitor or from a fetched page is hostile**: the
   target, its favicon, wherever a redirect lands. Request it through
-  `fetchPublicUrl`, never a bare `fetch`. Favicon bytes are hostile too; the
+  `fetchPublicUrl`, never a bare `fetch`: its dispatcher refuses private
+  addresses as each connection opens, the only point where a DNS answer or a
+  redirect hop can be checked. Favicon bytes are hostile too; the
   PNG reader in `icon-color.ts` bounds dimensions, chunk count and inflated
   size on purpose.
 - **Passing tests are not enough for the route.** Verify changes under

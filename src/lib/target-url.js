@@ -1,3 +1,5 @@
+import { BlockList, isIP } from "node:net";
+
 export class InvalidTargetUrlError extends Error {
   constructor(message) {
     super(message);
@@ -5,45 +7,66 @@ export class InvalidTargetUrlError extends Error {
   }
 }
 
-const BLOCKED_HOSTNAMES = new Set([
-  "localhost",
-  "localhost.localdomain",
-  "0.0.0.0",
-  "::",
-  "::1",
-]);
+const BLOCKED_HOSTNAMES = new Set(["localhost", "localhost.localdomain"]);
 
 const BLOCKED_SUFFIXES = [".localhost", ".local", ".internal", ".home.arpa"];
 
-const IPV4_PATTERN = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-
-function isPrivateIpv4(hostname) {
-  const match = hostname.match(IPV4_PATTERN);
-  if (!match) {
-    return false;
-  }
-
-  const [a, b] = match.slice(1, 3).map(Number);
-  const octets = match.slice(1).map(Number);
-  if (octets.some((octet) => octet > 255)) {
-    return true;
-  }
-
-  return (
-    a === 0 || // "this network"
-    a === 10 || // private
-    a === 127 || // loopback
-    (a === 100 && b >= 64 && b <= 127) || // carrier-grade NAT
-    (a === 169 && b === 254) || // link-local, incl. cloud metadata
-    (a === 172 && b >= 16 && b <= 31) || // private
-    (a === 192 && b === 168) || // private
-    a >= 224 // multicast and reserved
-  );
+const PRIVATE_ADDRESSES = new BlockList();
+for (const [network, prefix] of [
+  ["0.0.0.0", 8], // "this network"
+  ["10.0.0.0", 8], // private
+  ["100.64.0.0", 10], // carrier-grade NAT
+  ["127.0.0.0", 8], // loopback
+  ["169.254.0.0", 16], // link-local, incl. cloud metadata
+  ["172.16.0.0", 12], // private
+  ["192.0.0.0", 24], // IETF protocol assignments
+  ["192.168.0.0", 16], // private
+  ["224.0.0.0", 3], // multicast and reserved
+]) {
+  PRIVATE_ADDRESSES.addSubnet(network, prefix, "ipv4");
+}
+for (const [network, prefix] of [
+  ["::", 128], // unspecified
+  ["::1", 128], // loopback
+  ["fc00::", 7], // unique local
+  ["fe80::", 10], // link-local
+  ["ff00::", 8], // multicast
+]) {
+  PRIVATE_ADDRESSES.addSubnet(network, prefix, "ipv6");
 }
 
-function isPrivateIpv6(hostname) {
-  // fc00::/7 (unique local) and fe80::/10 (link-local)
-  return /^f[cd][0-9a-f]{2}:/i.test(hostname) || /^fe[89ab][0-9a-f]:/i.test(hostname);
+const NAT64 = new BlockList();
+NAT64.addSubnet("64:ff9b::", 96, "ipv6");
+
+// Behind a NAT64 gateway, 64:ff9b::a00:5 reaches 10.0.0.5: the last 32 bits
+// are the IPv4 address. Refusing the whole prefix instead would cut such a
+// host off from every IPv4-only site.
+function getNat64Ipv4(address) {
+  // Canonical text within this prefix is "64:ff9b::" and up to two groups.
+  const groups = new URL(`http://[${address}]/`).hostname
+    .slice("[64:ff9b::".length, -1)
+    .split(":")
+    .filter(Boolean)
+    .map((group) => parseInt(group, 16));
+  const [high, low] = [0, 0, ...groups].slice(-2);
+  return [high >> 8, high & 255, low >> 8, low & 255].join(".");
+}
+
+// BlockList matches an IPv4-mapped IPv6 address (::ffff:10.0.0.5) against the
+// IPv4 ranges, which a pattern over the text would miss.
+export function isPrivateAddress(address) {
+  const family = isIP(address);
+  // A zone ID (fe80::1%eth0) only ever scopes an address to a local link.
+  if (family === 6 && address.includes("%")) {
+    return true;
+  }
+  if (family === 6 && NAT64.check(address, "ipv6")) {
+    return isPrivateAddress(getNat64Ipv4(address));
+  }
+  return (
+    family !== 0 &&
+    PRIVATE_ADDRESSES.check(address, family === 4 ? "ipv4" : "ipv6")
+  );
 }
 
 function isBlockedHostname(hostname) {
@@ -52,8 +75,7 @@ function isBlockedHostname(hostname) {
   return (
     BLOCKED_HOSTNAMES.has(host) ||
     BLOCKED_SUFFIXES.some((suffix) => host.endsWith(suffix)) ||
-    isPrivateIpv4(host) ||
-    isPrivateIpv6(host)
+    isPrivateAddress(host)
   );
 }
 
@@ -70,9 +92,9 @@ function parseHttpUrl(value) {
 
 // Normalizes user input into an http(s) URL that is safe to fetch server-side.
 //
-// Note the limits: this rejects literal private addresses only. A public
-// hostname whose DNS record points at a private address still gets fetched,
-// which is why fetchHTML re-checks the URL it actually landed on.
+// This judges the URL alone, so it can only reject an address written into
+// it. Where a hostname resolves to, and where a redirect leads, is checked
+// when the connection is made: see publicOnlyDispatcher in fetch.js.
 export function normalizeTargetUrl(rawUrl) {
   const trimmed = (rawUrl || "").trim();
   if (!trimmed) {

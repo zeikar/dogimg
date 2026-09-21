@@ -75,7 +75,8 @@ export async function generateMetadata() {
   top of that.
 - `200`, when the page can't be fetched or isn't HTML: still an image, a plain
   card carrying the hostname, cached for five minutes at most. It is marked
-  with an `x-dogimg-fallback: 1` header.
+  with an `x-dogimg-fallback: 1` header. A hostname that resolves to a private
+  or local address, or a redirect that leads to one, is refused this way too.
 - `400`: The `url` isn't http(s), has no hostname, or names a private or local
   address.
 - `500`: Failed to generate image

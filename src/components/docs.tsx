@@ -25,7 +25,9 @@ const RESPONSES = [
       <>
         When the page can&apos;t be fetched or isn&apos;t HTML, you still get an
         image: a plain card carrying the hostname, cached for five minutes at
-        most. It is marked with an <Code>x-dogimg-fallback: 1</Code> header.
+        most. It is marked with an <Code>x-dogimg-fallback: 1</Code> header. A
+        hostname that resolves to a private or local address, or a redirect
+        that leads to one, is refused this way too.
       </>
     ),
   },

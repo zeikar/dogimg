@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   InvalidTargetUrlError,
+  isPrivateAddress,
   normalizeTargetUrl,
 } from "../src/lib/target-url.js";
 
@@ -52,6 +53,51 @@ test("rejects loopback and link-local hosts", () => {
       InvalidTargetUrlError,
       `expected ${value} to be rejected`
     );
+  }
+});
+
+test("rejects private addresses written as ipv4-mapped ipv6", () => {
+  for (const value of [
+    "http://[::ffff:127.0.0.1]/",
+    "http://[::ffff:a9fe:a9fe]/", // 169.254.169.254
+    "http://[::ffff:10.0.0.5]/",
+  ]) {
+    assert.throws(
+      () => normalizeTargetUrl(value),
+      InvalidTargetUrlError,
+      `expected ${value} to be rejected`
+    );
+  }
+});
+
+test("classifies resolved addresses of both families", () => {
+  for (const address of [
+    "127.0.0.1",
+    "10.1.2.3",
+    "169.254.169.254",
+    "0.0.0.0",
+    "::1",
+    "::",
+    "fd12:3456::1",
+    "fe80::1",
+    "::ffff:192.168.0.1",
+    "fe80::1%eth0",
+    "64:ff9b::1%eth0",
+    "192.0.0.192",
+    // NAT64 carries an IPv4 address in its last 32 bits.
+    "64:ff9b::a00:5",
+    "64:ff9b::7f00:1",
+    "64:ff9b::",
+  ]) {
+    assert.equal(isPrivateAddress(address), true, address);
+  }
+  for (const address of [
+    "93.184.215.14",
+    "2606:4700::6810:84e5",
+    "::ffff:8.8.8.8",
+    "64:ff9b::808:808",
+  ]) {
+    assert.equal(isPrivateAddress(address), false, address);
   }
 });
 

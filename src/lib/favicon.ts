@@ -2,6 +2,7 @@ import { fetchPublicUrl } from "@/lib/fetch";
 import { InvalidTargetUrlError } from "@/lib/target-url";
 import { isRenderableIconHref } from "@/lib/icon-href";
 import { getDominantIconColor } from "@/lib/icon-color";
+import type { Response as UndiciResponse } from "undici";
 
 const NO_FAVICON = { src: "", color: null };
 
@@ -46,7 +47,11 @@ function bytesToBase64(bytes: Uint8Array) {
 
 // Stops reading as soon as the limit is passed, so a chunked response that
 // never declares content-length can't stream unbounded data into memory.
-async function readBodyWithLimit(response: Response, maxBytes: number) {
+// fetchPublicUrl answers with undici's Response, a data: icon with the global one.
+async function readBodyWithLimit(
+  response: Response | UndiciResponse,
+  maxBytes: number
+) {
   if (!response.body) {
     const buffer = await response.arrayBuffer();
     return buffer.byteLength > maxBytes ? null : new Uint8Array(buffer);
@@ -183,8 +188,10 @@ async function fetchFavicon(imageUrl: string) {
   } catch (e) {
     // An unreachable icon is routine and stays quiet; a refused one is a page
     // pointing this service at a private address, which is worth a trace.
-    if (e instanceof InvalidTargetUrlError) {
-      console.warn(`[og] refused favicon url: ${e.message}`);
+    // A refusal made while connecting reaches here as fetch's TypeError cause.
+    const refusal = e instanceof TypeError ? e.cause : e;
+    if (refusal instanceof InvalidTargetUrlError) {
+      console.warn(`[og] refused favicon url: ${refusal.message}`);
     }
     return NO_FAVICON;
   } finally {
