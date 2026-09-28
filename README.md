@@ -1,5 +1,8 @@
 # DOGimg
 
+[![CI](https://github.com/zeikar/dogimg/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/zeikar/dogimg/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/zeikar/dogimg)](https://github.com/zeikar/dogimg/releases/latest)
+
 Turn any URL into an Open Graph image.
 
 Add one `og:image` tag, and every page you share gets its own preview card: its
@@ -100,6 +103,8 @@ It asks `https://dogimg.vercel.app` for the card, so the page still has to be
 public. Unlike the `curl` above, it saves nothing when the API answers with an
 error, and it exits with 1 and a warning when the page couldn't be read and the
 file is the plain fallback card. Requires Node.js 22 or later.
+
+npm: [dogimg](https://www.npmjs.com/package/dogimg)
 
 ## Deploy Your Own
 
